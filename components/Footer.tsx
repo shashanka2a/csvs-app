@@ -10,8 +10,8 @@ const matrimonyLinks = [
 
 const communityLinks = [
   { label: 'About Sangham', href: '/members' },
+  { label: 'Events', href: '/events' },
   { label: 'Gallery', href: '/gallery' },
-  { label: 'Make a Donation', href: '#' },
   { label: 'Area Representatives', href: '/members' },
 ];
 

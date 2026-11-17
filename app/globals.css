@@ -14,13 +14,13 @@
   .hero-bg {
     background-image: linear-gradient(
         to right,
-        rgba(0, 0, 0, 0.8) 0%,
-        rgba(0, 0, 0, 0.4) 50%,
-        rgba(0, 0, 0, 0.1) 100%
+        rgba(0, 0, 0, 0.85) 0%,
+        rgba(0, 0, 0, 0.5) 50%,
+        rgba(0, 0, 0, 0.3) 100%
       ),
-      url('https://images.unsplash.com/photo-1650342518618-fdeaae0ef4f0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+      url('https://images.unsplash.com/photo-1669394377141-490dc8776678?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
     background-size: cover;
-    background-position: center 30%;
+    background-position: center 40%;
   }
 
   .tab-link {
@@ -36,8 +36,9 @@
     appearance: none;
     background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23718096' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 1rem top 50%;
-    background-size: 0.65rem auto;
+    background-position: right 0.75rem center;
+    background-size: 0.7rem auto;
+    padding-right: 2.25rem;
   }
 
   .animate-fade-in {

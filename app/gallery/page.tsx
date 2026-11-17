@@ -61,10 +61,10 @@ const galleryItems: GalleryItem[] = [
   },
   {
     id: 6,
-    url: 'https://images.unsplash.com/photo-1650342518618-fdeaae0ef4f0?w=600&q=80',
+    url: 'https://images.unsplash.com/photo-1791988913635-74ced97e6a95?w=600&q=80',
     width: 600,
     height: 400,
-    title: 'Temple Architecture & Heritage',
+    title: 'Temple Bells & Floral Garlands',
     tag: 'Cultural',
   },
   {
@@ -85,11 +85,11 @@ const galleryItems: GalleryItem[] = [
   },
   {
     id: 9,
-    url: 'https://images.unsplash.com/photo-1554554497-0095c34db3ec?w=600&q=80',
+    url: 'https://images.unsplash.com/photo-1508261301902-127bcfb92787?w=600&q=80',
     width: 600,
     height: 350,
-    title: 'Historic Mandir Shrines',
-    tag: 'Cultural',
+    title: 'Traditional Lamps & Utsavam',
+    tag: 'Festivals',
   },
   {
     id: 10,

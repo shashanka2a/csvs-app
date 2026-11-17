@@ -9,7 +9,7 @@ export default function MembersSearch() {
   const [gender, setGender] = useState('All');
 
   return (
-    <div className="bg-brand-cream border-b border-brand-border py-4 sticky top-16 z-40">
+    <div className="bg-white border-b border-brand-border py-3.5 sticky top-16 z-40 shadow-sm">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
           {/* Search Input */}
@@ -29,7 +29,8 @@ export default function MembersSearch() {
             <select
               value={district}
               onChange={(e) => setDistrict(e.target.value)}
-              className="border border-brand-border rounded-md px-4 py-2 text-sm bg-white text-brand-dark focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red"
+              aria-label="Filter by district"
+              className="border border-brand-border rounded-md pl-3.5 pr-10 py-2 min-w-[160px] text-sm bg-white text-brand-dark focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red cursor-pointer shadow-sm"
             >
               <option value="All Districts">All Districts</option>
               <option value="Nizamabad">Nizamabad</option>
@@ -41,7 +42,8 @@ export default function MembersSearch() {
             <select
               value={gender}
               onChange={(e) => setGender(e.target.value)}
-              className="border border-brand-border rounded-md px-4 py-2 text-sm bg-white text-brand-dark focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red"
+              aria-label="Filter by gender"
+              className="border border-brand-border rounded-md pl-3.5 pr-8 py-2 min-w-[100px] text-sm bg-white text-brand-dark focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red cursor-pointer shadow-sm"
             >
               <option value="All">All</option>
               <option value="Male">Male</option>

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Users, ShieldCheck, Gift, User, UserPlus, Search, Heart } from 'lucide-react';
 import MatrimonySearch from '@/components/MatrimonySearch';
 
@@ -99,8 +100,15 @@ export default function MatrimonyPage() {
   return (
     <main className="min-h-screen">
       {/* 1. Hero Section */}
-      <section className="bg-gradient-to-br from-brand-red to-[#8A1515] text-white py-20">
+      <section className="bg-brand-dark text-white py-16">
         <div className="container mx-auto px-4 lg:px-8">
+          <div className="text-sm text-gray-500 mb-6">
+            <Link href="/" className="hover:text-gray-300 transition-colors">
+              Home
+            </Link>
+            <span className="mx-2">/</span>
+            <span className="text-gray-400">Matrimony</span>
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Column: Text & Badges */}
             <div>

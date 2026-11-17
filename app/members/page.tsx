@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { User } from 'lucide-react';
 import MembersSearch from '@/components/MembersSearch';
 
@@ -23,13 +24,6 @@ function getInitials(name: string) {
     .join('')
     .toUpperCase();
 }
-
-const stats = [
-  { value: 'Active', label: 'Sangham' },
-  { value: '12', label: 'Districts' },
-  { value: '50+', label: 'Mandals' },
-  { value: '2010', label: 'Est. Year' },
-];
 
 const members: Member[] = [
   {
@@ -86,34 +80,25 @@ export default function MembersPage() {
   return (
     <main className="min-h-screen bg-brand-cream/30">
       {/* 1. Hero banner */}
-      <section className="bg-brand-red text-white py-16">
-        <div className="container mx-auto px-4 lg:px-8 text-center md:text-left">
+      <section className="bg-brand-dark text-white py-16">
+        <div className="container mx-auto px-4 lg:px-8">
           <h1 className="font-serif text-4xl md:text-5xl font-bold mb-3">
             Our Community Members
           </h1>
-          <p className="text-white/80 text-base md:text-lg max-w-2xl">
+          <p className="text-gray-400 text-base md:text-lg max-w-2xl">
             Connect with members of our Sangham across different districts and mandals of Telangana.
           </p>
-        </div>
-      </section>
-
-      {/* 2. Stats bar */}
-      <section className="bg-brand-dark text-white py-6">
-        <div className="container mx-auto px-4 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            {stats.map((stat) => (
-              <div key={stat.label}>
-                <p className="font-serif text-3xl font-bold text-brand-gold">
-                  {stat.value}
-                </p>
-                <p className="text-sm text-gray-400 mt-1">{stat.label}</p>
-              </div>
-            ))}
+          <div className="text-sm text-gray-500 mt-4">
+            <Link href="/" className="hover:text-gray-300 transition-colors">
+              Home
+            </Link>
+            <span className="mx-2">/</span>
+            <span className="text-gray-400">Members</span>
           </div>
         </div>
       </section>
 
-      {/* 3. Search/filter row */}
+      {/* 2. Search/filter row */}
       <MembersSearch />
 
       {/* 4. Members grid */}

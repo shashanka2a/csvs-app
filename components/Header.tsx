@@ -10,6 +10,7 @@ const navLinks = [
   { label: 'Home', href: '/' },
   { label: 'Members', href: '/members' },
   { label: 'Matrimony', href: '/matrimony' },
+  { label: 'Events', href: '/events' },
   { label: 'Gallery', href: '/gallery' },
 ];
 

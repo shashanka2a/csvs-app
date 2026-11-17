@@ -20,7 +20,7 @@ export default function EventsFilter() {
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
               isActive
                 ? 'bg-brand-red text-white'
-                : 'bg-brand-cream text-brand-dark hover:bg-brand-border'
+                : 'bg-gray-100 text-brand-dark hover:bg-gray-200'
             }`}
           >
             {filter}

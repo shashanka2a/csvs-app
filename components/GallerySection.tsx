@@ -20,14 +20,14 @@ export default function GallerySection() {
           {/* Left — large image */}
           <div className="relative group overflow-hidden rounded-xl h-64 md:h-full bg-brand-cream border border-brand-border">
             <Image
-              src="https://images.unsplash.com/photo-1650342518618-fdeaae0ef4f0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-              alt="Temple Heritage & Utsavams"
+              src="https://images.unsplash.com/photo-1791988913635-74ced97e6a95?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+              alt="Temple Traditions & Bells"
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-500"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-6">
               <h4 className="text-white font-bold text-lg">
-                Temple Heritage &amp; Utsavams
+                Temple Traditions &amp; Bells
               </h4>
             </div>
           </div>
