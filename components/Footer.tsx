@@ -4,14 +4,13 @@ import Logo from '@/components/Logo';
 
 const matrimonyLinks = [
   { label: 'Search Profiles', href: '/matrimony' },
-  { label: 'Premium Membership', href: '/matrimony' },
-  { label: 'Success Stories', href: '/articles' },
+  { label: 'Membership', href: '/matrimony' },
   { label: 'Privacy Policy', href: '#' },
 ];
 
 const communityLinks = [
   { label: 'About Sangham', href: '/members' },
-  { label: 'Event Gallery', href: '/gallery' },
+  { label: 'Gallery', href: '/gallery' },
   { label: 'Make a Donation', href: '#' },
   { label: 'Area Representatives', href: '/members' },
 ];

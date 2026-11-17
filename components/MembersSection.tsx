@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { User, ArrowRight } from 'lucide-react';
 
@@ -16,28 +15,26 @@ const tabs: { id: Area; label: string }[] = [
 
 interface Member {
   name: string;
-  photo?: string;
   role: string;
   joined: string;
 }
 
+function getInitials(name: string) {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+}
+
 function MemberCard({ member }: { member: Member }) {
+  const initials = getInitials(member.name);
   return (
     <div className="bg-brand-cream rounded-xl p-6 text-center border border-brand-border hover:shadow-md transition-shadow">
-      <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden border-4 border-white shadow-sm">
-        {member.photo ? (
-          <Image
-            src={member.photo}
-            alt={member.name}
-            width={96}
-            height={96}
-            className="rounded-full object-cover border-4 border-white shadow-sm"
-          />
-        ) : (
-          <div className="w-full h-full bg-brand-border flex items-center justify-center rounded-full">
-            <User className="text-brand-muted w-10 h-10" />
-          </div>
-        )}
+      <div className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center bg-brand-red/10 border-2 border-brand-red/20 shadow-sm text-brand-red font-serif font-bold text-xl">
+        {initials || <User className="text-brand-muted w-8 h-8" />}
       </div>
       <p className="font-bold text-brand-dark text-lg">{member.name}</p>
       <p className="text-sm text-brand-red font-medium mb-1">{member.role}</p>
@@ -62,8 +59,6 @@ function ViewMoreCard({ count, area }: { count: string; area: string }) {
 const nizamabadMembers: Member[] = [
   {
     name: 'Ramesh Kumar',
-    photo:
-      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80',
     role: 'Nizamabad Central',
     joined: 'Joined 2018',
   },
@@ -74,8 +69,6 @@ const nizamabadMembers: Member[] = [
   },
   {
     name: 'Lakshmi Devi',
-    photo:
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80',
     role: 'Nizamabad',
     joined: 'Joined 2015',
   },
@@ -84,8 +77,6 @@ const nizamabadMembers: Member[] = [
 const armoorMembers: Member[] = [
   {
     name: 'Venkatesh P.',
-    photo:
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80',
     role: 'Armoor Town',
     joined: 'Joined 2019',
   },

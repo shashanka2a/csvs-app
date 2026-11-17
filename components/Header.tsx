@@ -9,10 +9,8 @@ import Logo from '@/components/Logo';
 const navLinks = [
   { label: 'Home', href: '/' },
   { label: 'Members', href: '/members' },
-  { label: 'Events', href: '/events' },
   { label: 'Matrimony', href: '/matrimony' },
   { label: 'Gallery', href: '/gallery' },
-  { label: 'Articles', href: '/articles' },
 ];
 
 export default function Header() {

@@ -18,9 +18,9 @@
         rgba(0, 0, 0, 0.4) 50%,
         rgba(0, 0, 0, 0.1) 100%
       ),
-      url('https://images.unsplash.com/photo-1604085572504-a392ddf0d86a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+      url('https://images.unsplash.com/photo-1650342518618-fdeaae0ef4f0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
     background-size: cover;
-    background-position: center 20%;
+    background-position: center 30%;
   }
 
   .tab-link {

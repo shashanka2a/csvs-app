@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CircleCheck, Gem } from "lucide-react";
+import { CircleCheck } from "lucide-react";
 
 export default function MatrimonySection() {
   return (
@@ -48,27 +48,12 @@ export default function MatrimonySection() {
           {/* Right column */}
           <div className="relative">
             <Image
-              src="https://images.unsplash.com/photo-1552589578-8cfbc443ceb6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-              alt="Matrimony Ceremony"
+              src="https://images.unsplash.com/photo-1583939003579-730e3918a45a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+              alt="Traditional Matrimony Kalyana Ceremony"
               width={800}
               height={400}
               className="rounded-xl shadow-card object-cover w-full h-[400px]"
             />
-
-            {/* Floating badge */}
-            <div className="absolute -bottom-6 -left-6 bg-white p-4 rounded-xl shadow-lg border border-brand-border/50 hidden md:block">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-brand-cream rounded-full flex items-center justify-center text-brand-gold text-2xl">
-                  <Gem className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-brand-dark text-sm">
-                    Trusted by 5000+
-                  </h4>
-                  <p className="text-xs text-brand-muted">Families worldwide</p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

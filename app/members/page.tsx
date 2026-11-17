@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import { User } from 'lucide-react';
 import MembersSearch from '@/components/MembersSearch';
 
@@ -10,14 +9,23 @@ export const metadata: Metadata = {
 
 interface Member {
   name: string;
-  photo: string | null;
   district: string;
   mandal: string;
   joined: number;
 }
 
+function getInitials(name: string) {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+}
+
 const stats = [
-  { value: '5,000+', label: 'Members' },
+  { value: 'Active', label: 'Sangham' },
   { value: '12', label: 'Districts' },
   { value: '50+', label: 'Mandals' },
   { value: '2010', label: 'Est. Year' },
@@ -26,56 +34,48 @@ const stats = [
 const members: Member[] = [
   {
     name: 'Ramesh Kumar',
-    photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80',
     district: 'Nizamabad',
     mandal: 'Nizamabad Central',
     joined: 2018,
   },
   {
     name: 'Srinivas V.',
-    photo: null,
     district: 'Nizamabad',
     mandal: 'Nizamabad Rural',
     joined: 2020,
   },
   {
     name: 'Lakshmi Devi',
-    photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80',
     district: 'Nizamabad',
     mandal: 'Nizamabad',
     joined: 2015,
   },
   {
     name: 'Venkatesh P.',
-    photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80',
     district: 'Armoor',
     mandal: 'Armoor Town',
     joined: 2019,
   },
   {
     name: 'Padmavathi S.',
-    photo: null,
     district: 'Bodhan',
     mandal: 'Bodhan East',
     joined: 2021,
   },
   {
     name: 'Ravi Shankar',
-    photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80',
     district: 'Nirmal',
     mandal: 'Nirmal Town',
     joined: 2017,
   },
   {
     name: 'Anitha Reddy',
-    photo: null,
     district: 'Armoor',
     mandal: 'Armoor West',
     joined: 2022,
   },
   {
     name: 'Suresh Babu',
-    photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80',
     district: 'Nizamabad',
     mandal: 'Nizamabad North',
     joined: 2016,
@@ -125,21 +125,9 @@ export default function MembersPage() {
               className="bg-white rounded-xl border border-brand-border shadow-soft hover:shadow-card transition-shadow p-6 text-center flex flex-col justify-between"
             >
               <div>
-                {/* Avatar */}
-                <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden border-4 border-brand-cream shadow-sm flex items-center justify-center">
-                  {member.photo ? (
-                    <Image
-                      src={member.photo}
-                      alt={member.name}
-                      width={96}
-                      height={96}
-                      className="rounded-full object-cover w-full h-full"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-brand-cream flex items-center justify-center">
-                      <User className="text-brand-muted w-10 h-10" />
-                    </div>
-                  )}
+                {/* Avatar Initials */}
+                <div className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden border-2 border-brand-red/20 bg-brand-red/10 flex items-center justify-center shadow-sm text-brand-red font-serif font-bold text-xl">
+                  {getInitials(member.name) || <User className="text-brand-muted w-8 h-8" />}
                 </div>
 
                 {/* Name */}
@@ -177,7 +165,7 @@ export default function MembersPage() {
         {/* 5. Pagination row */}
         <div className="container mx-auto py-8 text-center">
           <p className="text-brand-muted text-sm text-center mb-4">
-            Showing 8 of 5,000+ members
+            Showing active community members across Telangana
           </p>
           <div className="flex items-center justify-center gap-2">
             <button

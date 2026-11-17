@@ -20,14 +20,14 @@ export default function GallerySection() {
           {/* Left — large image */}
           <div className="relative group overflow-hidden rounded-xl h-64 md:h-full bg-brand-cream border border-brand-border">
             <Image
-              src="https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-              alt="Community Event"
+              src="https://images.unsplash.com/photo-1650342518618-fdeaae0ef4f0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+              alt="Temple Heritage & Utsavams"
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-500"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-6">
               <h4 className="text-white font-bold text-lg">
-                Community Gatherings
+                Temple Heritage &amp; Utsavams
               </h4>
             </div>
           </div>
@@ -37,14 +37,14 @@ export default function GallerySection() {
             {/* Top */}
             <div className="relative group overflow-hidden rounded-xl h-48 md:h-64 bg-brand-cream border border-brand-border">
               <Image
-                src="https://images.unsplash.com/photo-1508261301902-127bcfb92787?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                alt="Diwali"
+                src="https://images.unsplash.com/photo-1669394377141-490dc8776678?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                alt="Festive Deepotsavam & Deepam"
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-6">
                 <h4 className="text-white font-bold text-lg">
-                  Diwali Celebrations
+                  Festive Deepotsavam
                 </h4>
               </div>
             </div>
@@ -52,14 +52,14 @@ export default function GallerySection() {
             {/* Bottom */}
             <div className="relative group overflow-hidden rounded-xl h-48 md:h-64 bg-brand-cream border border-brand-border">
               <Image
-                src="https://images.unsplash.com/photo-1600096194534-95cf5ece04cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                alt="Vinayaka Chavithi"
+                src="https://images.unsplash.com/photo-1604085572504-a392ddf0d86a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                alt="Cultural Celebrations & Traditions"
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-6">
                 <h4 className="text-white font-bold text-lg">
-                  Vinayaka Chavithi
+                  Cultural Celebrations
                 </h4>
               </div>
             </div>
