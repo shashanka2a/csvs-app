@@ -9,8 +9,8 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          red: '#B31B1B',
-          redhover: '#8A1515',
+          red: '#8A1515',
+          redhover: '#6B1010',
           gold: '#F59E0B',
           goldhover: '#D97706',
           cream: '#FFFBF5',

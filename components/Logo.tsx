@@ -2,9 +2,10 @@ import React from 'react';
 
 interface LogoProps {
   className?: string;
+  bgFill?: string;
 }
 
-export default function Logo({ className = 'w-9 h-9' }: LogoProps) {
+export default function Logo({ className = 'w-9 h-9', bgFill = '#8A1515' }: LogoProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -13,7 +14,7 @@ export default function Logo({ className = 'w-9 h-9' }: LogoProps) {
       fill="currentColor"
     >
       {/* Background */}
-      <rect width="256" height="256" rx="36" fill="#66444d" />
+      <rect width="256" height="256" rx="36" fill={bgFill} />
 
       {/* White Namam (Thiruman) */}
       <path
