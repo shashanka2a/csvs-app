@@ -6,7 +6,7 @@ export default function HeroSection() {
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
         <div className="max-w-2xl">
           <span className="text-brand-gold text-sm font-bold tracking-widest uppercase mb-3 block drop-shadow-md">
-            Welcome to Chattada Sri Vaishnava
+            Welcome to Chattada Sri Vaishnava Sangham
           </span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl text-white font-serif font-bold mb-4 leading-tight">
             All About{' '}

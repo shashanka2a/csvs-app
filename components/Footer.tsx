@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Flower2, Facebook, Instagram, Youtube, MapPin, Phone, Mail } from 'lucide-react';
+import { Facebook, Instagram, Youtube, MapPin, Phone, Mail } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 const matrimonyLinks = [
   { label: 'Search Profiles', href: '/matrimony' },
@@ -23,9 +24,14 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* Column 1: Brand */}
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Flower2 className="text-brand-gold w-8 h-8" />
-              <span className="font-serif text-2xl text-white font-bold">CSVS</span>
+            <div className="flex items-center gap-3 mb-3">
+              <Logo className="w-10 h-10 rounded-md shrink-0 shadow" />
+              <div className="flex flex-col">
+                <span className="font-serif text-2xl text-white font-bold leading-tight">CSVS</span>
+                <span className="text-[11px] uppercase tracking-wider text-gray-400">
+                  Chattada Sri Vaishnava Sangham
+                </span>
+              </div>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed mb-5">
               Preserving tradition, fostering community, and celebrating heritage across generations.

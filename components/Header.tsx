@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Flower2, User, Menu, X } from 'lucide-react';
+import { User, Menu, X } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 const navLinks = [
   { label: 'Home', href: '/' },
@@ -28,12 +29,12 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <Flower2 className="text-brand-red text-3xl w-8 h-8" />
+          <Link href="/" className="flex items-center gap-2.5">
+            <Logo className="w-9 h-9 rounded-md shadow-sm shrink-0" />
             <div className="flex flex-col leading-tight">
               <span className="font-serif font-bold text-xl text-brand-red">CSVS</span>
               <span className="text-[10px] uppercase tracking-wider text-brand-muted">
-                Chattada Sri Vaishnava
+                Chattada Sri Vaishnava Sangham
               </span>
             </div>
           </Link>
