@@ -86,7 +86,7 @@ export default function AdminPage() {
     const validUsername =
       username.trim().toLowerCase() === 'admin' ||
       username.trim().toLowerCase() === 'csvsangham@gmail.com';
-    const validPassword = password === 'admin123' || password === 'csvs2026';
+    const validPassword = password === 'Demo@123' || password === 'admin123';
 
     if (validUsername && validPassword) {
       localStorage.setItem('csvs_admin_token', 'csvs_authenticated');
@@ -312,7 +312,7 @@ export default function AdminPage() {
               <p className="text-[11px] text-brand-muted">
                 Username: <code className="font-mono font-bold text-brand-dark">admin</code>
                 <br />
-                Password: <code className="font-mono font-bold text-brand-dark">admin123</code>
+                Password: <code className="font-mono font-bold text-brand-dark">Demo@123</code>
               </p>
             </div>
             <Link
