@@ -3,12 +3,10 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ZoomIn } from 'lucide-react';
-import GalleryFilter from '@/components/GalleryFilter';
 import { GalleryPhoto, DEFAULT_PHOTOS, getStoredPhotos } from '@/lib/contentStore';
 
 export default function GalleryPage() {
   const [photos, setPhotos] = useState<GalleryPhoto[]>(DEFAULT_PHOTOS);
-  const [activeCategory, setActiveCategory] = useState<string>('All');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -19,11 +17,6 @@ export default function GalleryPage() {
     }
   }, []);
 
-  const filteredPhotos =
-    activeCategory === 'All'
-      ? photos
-      : photos.filter((p) => p.tag.toLowerCase() === activeCategory.toLowerCase());
-
   return (
     <div className="bg-white min-h-screen">
       {/* 1. Hero */}
@@ -31,25 +24,18 @@ export default function GalleryPage() {
         <div className="container mx-auto px-4 lg:px-8">
           <h1 className="font-serif text-4xl md:text-5xl font-bold mb-3">Our Gallery</h1>
           <p className="text-gray-400">
-            Cherished moments from our community events, festivals, and celebrations.
+            Cherished moments and photos from our community celebrations and gatherings.
           </p>
         </div>
       </section>
 
-      {/* 2. Category filter tabs */}
-      <div className="sticky top-16 z-40 bg-white border-b border-brand-border">
-        <div className="container mx-auto px-4 lg:px-8 py-3">
-          <GalleryFilter onSelectCategory={(cat) => setActiveCategory(cat)} />
-        </div>
-      </div>
-
-      {/* 3. Gallery masonry grid */}
+      {/* 2. Gallery grid */}
       <section className="container mx-auto px-4 lg:px-8 py-12">
         <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
-          {filteredPhotos.map((item) => (
+          {photos.map((item) => (
             <div
               key={item.id}
-              className="relative group overflow-hidden rounded-xl bg-brand-cream border border-brand-border/60 shadow-card break-inside-avoid"
+              className="relative group overflow-hidden rounded-2xl bg-brand-cream border border-brand-border/60 shadow-card break-inside-avoid"
             >
               <div className="relative w-full aspect-[16/10] overflow-hidden">
                 <Image
@@ -61,15 +47,10 @@ export default function GalleryPage() {
                 />
               </div>
 
-              {/* Tag pill top-right */}
-              <span className="absolute top-3 right-3 bg-white/90 backdrop-blur-xs text-brand-dark text-xs font-semibold px-2.5 py-0.5 rounded-full shadow-sm">
-                {item.tag}
-              </span>
-
               {/* Hover overlay with title */}
-              <div className="absolute inset-0 bg-brand-dark/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                <p className="text-white font-serif font-semibold text-lg">{item.title}</p>
-                <div className="flex items-center gap-1 text-brand-gold text-xs mt-1">
+              <div className="absolute inset-0 bg-brand-dark/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5">
+                <p className="text-white font-serif font-bold text-lg">{item.title}</p>
+                <div className="flex items-center gap-1.5 text-brand-gold text-xs mt-1 font-medium">
                   <ZoomIn className="w-3.5 h-3.5" />
                   <span>View photo</span>
                 </div>

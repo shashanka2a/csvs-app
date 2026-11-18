@@ -58,7 +58,6 @@ export default function AdminPage() {
   // New photo input state
   const [newPhotoUrl, setNewPhotoUrl] = useState<string>('/images/1.jpg');
   const [newPhotoTitle, setNewPhotoTitle] = useState<string>('');
-  const [newPhotoTag, setNewPhotoTag] = useState<GalleryPhoto['tag']>('Community');
 
   // Check login state on mount
   useEffect(() => {
@@ -84,7 +83,9 @@ export default function AdminPage() {
     setLoginError('');
 
     // Acceptable admin credentials
-    const validUsername = username.trim().toLowerCase() === 'admin' || username.trim().toLowerCase() === 'csvsangham@gmail.com';
+    const validUsername =
+      username.trim().toLowerCase() === 'admin' ||
+      username.trim().toLowerCase() === 'csvsangham@gmail.com';
     const validPassword = password === 'admin123' || password === 'csvs2026';
 
     if (validUsername && validPassword) {
@@ -134,8 +135,8 @@ export default function AdminPage() {
     showToast(`Moved "${moved.title}" to ${position}`);
   };
 
-  const updatePhotoDetails = (id: number, key: keyof GalleryPhoto, value: string) => {
-    const updated = photos.map((p) => (p.id === id ? { ...p, [key]: value } : p));
+  const updatePhotoTitle = (id: number, title: string) => {
+    const updated = photos.map((p) => (p.id === id ? { ...p, title } : p));
     setPhotos(updated);
   };
 
@@ -161,7 +162,6 @@ export default function AdminPage() {
       id: newId,
       url: newPhotoUrl.trim(),
       title: newPhotoTitle.trim(),
-      tag: newPhotoTag,
       order: photos.length + 1,
     };
     const updated = [...photos, newPhoto];
@@ -435,7 +435,7 @@ export default function AdminPage() {
                   Gallery Photo Manager
                 </h2>
                 <p className="text-sm text-brand-muted mt-1">
-                  Rearrange photo order, edit photo titles, and assign categories. Changes update live across the gallery.
+                  Rearrange photo order and edit photo titles. Changes update live across the gallery.
                 </p>
               </div>
 
@@ -480,40 +480,20 @@ export default function AdminPage() {
                     </div>
                     <div>
                       <p className="text-xs font-mono text-brand-muted">{photo.url}</p>
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 mt-1 inline-block">
-                        {photo.tag}
-                      </span>
                     </div>
                   </div>
 
-                  {/* Middle: Title & Category Inputs */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-grow max-w-xl">
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-brand-muted mb-1">
-                        Title
-                      </label>
-                      <input
-                        type="text"
-                        value={photo.title}
-                        onChange={(e) => updatePhotoDetails(photo.id, 'title', e.target.value)}
-                        className="w-full px-3 py-1.5 rounded-md border border-brand-border text-sm text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-brand-muted mb-1">
-                        Category
-                      </label>
-                      <select
-                        value={photo.tag}
-                        onChange={(e) => updatePhotoDetails(photo.id, 'tag', e.target.value as any)}
-                        className="w-full px-3 py-1.5 rounded-md border border-brand-border text-sm text-brand-dark focus:ring-1 focus:ring-brand-red outline-none bg-white"
-                      >
-                        <option value="Community">Community</option>
-                        <option value="Festivals">Festivals</option>
-                        <option value="Cultural">Cultural</option>
-                        <option value="Weddings">Weddings</option>
-                      </select>
-                    </div>
+                  {/* Middle: Title Input */}
+                  <div className="flex-grow max-w-xl">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-brand-muted mb-1">
+                      Photo Title
+                    </label>
+                    <input
+                      type="text"
+                      value={photo.title}
+                      onChange={(e) => updatePhotoTitle(photo.id, e.target.value)}
+                      className="w-full px-3 py-2 rounded-md border border-brand-border text-sm text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                    />
                   </div>
 
                   {/* Right: Reorder buttons & delete */}
@@ -560,7 +540,7 @@ export default function AdminPage() {
                 <Plus className="w-4 h-4 text-brand-red" />
                 <span>Add Another Photo to Gallery</span>
               </h3>
-              <form onSubmit={handleAddPhoto} className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <form onSubmit={handleAddPhoto} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-bold uppercase tracking-wider text-brand-muted mb-1">
                     Photo URL or Local Path
@@ -590,22 +570,7 @@ export default function AdminPage() {
                     className="w-full px-3 py-2 rounded-lg border border-brand-border text-sm text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-brand-muted mb-1">
-                    Category Tag
-                  </label>
-                  <select
-                    value={newPhotoTag}
-                    onChange={(e) => setNewPhotoTag(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-lg border border-brand-border text-sm text-brand-dark focus:ring-1 focus:ring-brand-red outline-none bg-white"
-                  >
-                    <option value="Community">Community</option>
-                    <option value="Festivals">Festivals</option>
-                    <option value="Cultural">Cultural</option>
-                    <option value="Weddings">Weddings</option>
-                  </select>
-                </div>
-                <div className="sm:col-span-4 flex justify-end">
+                <div className="sm:col-span-3 flex justify-end">
                   <button
                     type="submit"
                     className="inline-flex items-center gap-2 bg-brand-red hover:bg-brand-redhover text-white px-5 py-2.5 rounded-lg text-xs font-bold transition-colors shadow-xs"
@@ -992,7 +957,7 @@ export default function AdminPage() {
                     <Image src={p.url} alt={p.title} fill className="object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4">
                       <span className="text-[10px] font-bold uppercase text-brand-gold">
-                        Position #{idx + 1} • {p.tag}
+                        Position #{idx + 1}
                       </span>
                       <p className="text-white font-serif font-bold text-sm">{p.title}</p>
                     </div>
