@@ -118,7 +118,7 @@ export default function AdminPage() {
     const reordered = newPhotos.map((item, idx) => ({ ...item, order: idx + 1 }));
     setPhotos(reordered);
     saveStoredPhotos(reordered);
-    showToast(`Moved "${moved.title}" to position #${targetIndex + 1}`);
+    showToast(`Moved photo to position #${targetIndex + 1}`);
   };
 
   const movePhotoToExtreme = (index: number, position: 'top' | 'bottom') => {
@@ -132,12 +132,7 @@ export default function AdminPage() {
     const reordered = newPhotos.map((item, idx) => ({ ...item, order: idx + 1 }));
     setPhotos(reordered);
     saveStoredPhotos(reordered);
-    showToast(`Moved "${moved.title}" to ${position}`);
-  };
-
-  const updatePhotoTitle = (id: number, title: string) => {
-    const updated = photos.map((p) => (p.id === id ? { ...p, title } : p));
-    setPhotos(updated);
+    showToast(`Moved photo to ${position}`);
   };
 
   const removePhoto = (id: number) => {
@@ -153,21 +148,15 @@ export default function AdminPage() {
 
   const handleAddPhoto = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPhotoTitle.trim()) {
-      alert('Please enter a photo title.');
-      return;
-    }
     const newId = Math.max(...photos.map((p) => p.id), 0) + 1;
     const newPhoto: GalleryPhoto = {
       id: newId,
       url: newPhotoUrl.trim(),
-      title: newPhotoTitle.trim(),
       order: photos.length + 1,
     };
     const updated = [...photos, newPhoto];
     setPhotos(updated);
     saveStoredPhotos(updated);
-    setNewPhotoTitle('');
     showToast('New photo added to gallery!');
   };
 
@@ -472,17 +461,12 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  {/* Middle: Title Input */}
+                  {/* Middle: Photo Info */}
                   <div className="flex-grow max-w-xl">
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-brand-muted mb-1">
-                      Photo Title
-                    </label>
-                    <input
-                      type="text"
-                      value={photo.title}
-                      onChange={(e) => updatePhotoTitle(photo.id, e.target.value)}
-                      className="w-full px-3 py-2 rounded-md border border-brand-border text-sm text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
-                    />
+                    <p className="text-sm font-semibold text-brand-dark">Photo #{index + 1}</p>
+                    <p className="text-xs text-brand-muted">
+                      Source: <span className="font-mono text-brand-dark">{photo.url}</span>
+                    </p>
                   </div>
 
                   {/* Right: Reorder buttons & delete */}

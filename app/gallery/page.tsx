@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { ZoomIn } from 'lucide-react';
 import { GalleryPhoto, DEFAULT_PHOTOS, getStoredPhotos } from '@/lib/contentStore';
 
 export default function GalleryPage() {
@@ -29,31 +28,22 @@ export default function GalleryPage() {
         </div>
       </section>
 
-      {/* 2. Gallery grid (row-wise order) */}
+      {/* 2. Gallery grid (7 photos in numerical row-wise order, no titles, no hover overlay) */}
       <section className="container mx-auto px-4 lg:px-8 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {photos.map((item) => (
+          {photos.map((item, index) => (
             <div
               key={item.id}
-              className="relative group overflow-hidden rounded-2xl bg-brand-cream border border-brand-border/60 shadow-card"
+              className="relative overflow-hidden rounded-2xl bg-brand-cream border border-brand-border/70 shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="relative w-full aspect-[16/10] overflow-hidden">
                 <Image
                   src={item.url}
-                  alt={item.title}
+                  alt={`Photo ${index + 1}`}
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="object-cover"
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
-              </div>
-
-              {/* Hover overlay with title */}
-              <div className="absolute inset-0 bg-brand-dark/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5">
-                <p className="text-white font-serif font-bold text-lg">{item.title}</p>
-                <div className="flex items-center gap-1.5 text-brand-gold text-xs mt-1 font-medium">
-                  <ZoomIn className="w-3.5 h-3.5" />
-                  <span>View photo</span>
-                </div>
               </div>
             </div>
           ))}

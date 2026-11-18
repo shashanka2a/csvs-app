@@ -38,56 +38,41 @@ export default function GallerySection() {
           </p>
         </div>
 
-        {/* Grid */}
+        {/* Grid (clean images, no text overlay) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-5xl mx-auto mb-10">
           {/* Left — large image */}
-          <div className="relative group overflow-hidden rounded-2xl h-72 md:h-full min-h-[300px] bg-brand-cream border border-brand-border/80 shadow-sm">
+          <div className="relative overflow-hidden rounded-2xl h-72 md:h-full min-h-[300px] bg-brand-cream border border-brand-border/80 shadow-sm">
             <Image
               src={p1.url}
-              alt={p1.title}
+              alt="Community Photo 1"
               fill
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              className="object-cover"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent flex items-end p-6">
-              <h4 className="text-white font-bold text-lg">
-                {p1.title}
-              </h4>
-            </div>
           </div>
 
           {/* Right — two stacked images */}
           <div className="grid grid-rows-2 gap-5">
             {/* Top */}
-            <div className="relative group overflow-hidden rounded-2xl h-48 md:h-56 bg-brand-cream border border-brand-border/80 shadow-sm">
+            <div className="relative overflow-hidden rounded-2xl h-48 md:h-56 bg-brand-cream border border-brand-border/80 shadow-sm">
               <Image
                 src={p2.url}
-                alt={p2.title}
+                alt="Community Photo 2"
                 fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                className="object-cover"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent flex items-end p-6">
-                <h4 className="text-white font-bold text-lg">
-                  {p2.title}
-                </h4>
-              </div>
             </div>
 
             {/* Bottom */}
-            <div className="relative group overflow-hidden rounded-2xl h-48 md:h-56 bg-brand-cream border border-brand-border/80 shadow-sm">
+            <div className="relative overflow-hidden rounded-2xl h-48 md:h-56 bg-brand-cream border border-brand-border/80 shadow-sm">
               <Image
                 src={p3.url}
-                alt={p3.title}
+                alt="Community Photo 3"
                 fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                className="object-cover"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent flex items-end p-6">
-                <h4 className="text-white font-bold text-lg">
-                  {p3.title}
-                </h4>
-              </div>
             </div>
           </div>
         </div>

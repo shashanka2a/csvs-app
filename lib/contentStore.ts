@@ -3,7 +3,6 @@
 export interface GalleryPhoto {
   id: number;
   url: string;
-  title: string;
   order: number;
 }
 
@@ -39,18 +38,13 @@ export interface SiteContent {
 }
 
 export const DEFAULT_PHOTOS: GalleryPhoto[] = [
-  { id: 1, url: '/images/1.jpg', title: 'Community Gathering', order: 1 },
-  { id: 2, url: '/images/2.jpg', title: 'Festive Celebrations', order: 2 },
-  { id: 3, url: '/images/3.jpg', title: 'Community Meeting', order: 3 },
-  { id: 4, url: '/images/4.jpg', title: 'Cultural Program', order: 4 },
-  { id: 5, url: '/images/5.jpg', title: 'Family Gathering', order: 5 },
-  { id: 6, url: '/images/6.jpg', title: 'Traditional Celebrations', order: 6 },
-  { id: 7, url: '/images/7.jpg', title: 'Festival of Lights', order: 7 },
-  { id: 8, url: '/images/8.jpg', title: 'Community Assembly', order: 8 },
-  { id: 9, url: '/images/9.jpg', title: 'Traditional Ceremony', order: 9 },
-  { id: 10, url: '/images/10.jpg', title: 'Sangham Members Meet', order: 10 },
-  { id: 11, url: '/images/11.jpg', title: 'Annual Celebrations', order: 11 },
-  { id: 12, url: '/images/12.jpg', title: 'Community Group Photo', order: 12 },
+  { id: 1, url: '/images/1.jpg', order: 1 },
+  { id: 2, url: '/images/2.jpg', order: 2 },
+  { id: 3, url: '/images/3.jpg', order: 3 },
+  { id: 4, url: '/images/4.jpg', order: 4 },
+  { id: 5, url: '/images/5.jpg', order: 5 },
+  { id: 6, url: '/images/6.jpg', order: 6 },
+  { id: 7, url: '/images/7.jpg', order: 7 },
 ];
 
 export const DEFAULT_CONTENT: SiteContent = {
