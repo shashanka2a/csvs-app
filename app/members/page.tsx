@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { User } from 'lucide-react';
 import MembersSearch from '@/components/MembersSearch';
 
@@ -88,13 +87,6 @@ export default function MembersPage() {
           <p className="text-gray-400 text-base md:text-lg max-w-2xl">
             Connect with members of our Sangham across different districts and mandals of Telangana.
           </p>
-          <div className="text-sm text-gray-500 mt-4">
-            <Link href="/" className="hover:text-gray-300 transition-colors">
-              Home
-            </Link>
-            <span className="mx-2">/</span>
-            <span className="text-gray-400">Members</span>
-          </div>
         </div>
       </section>
 

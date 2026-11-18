@@ -48,7 +48,7 @@ export default function MatrimonySection() {
           {/* Right column */}
           <div className="relative">
             <Image
-              src="https://images.unsplash.com/photo-1583939003579-730e3918a45a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+              src="/images/matrimony.jpg"
               alt="Traditional Matrimony Kalyana Ceremony"
               width={800}
               height={400}

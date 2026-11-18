@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Image from 'next/image';
 import { Users, ShieldCheck, Gift, User, UserPlus, Search, Heart } from 'lucide-react';
 import MatrimonySearch from '@/components/MatrimonySearch';
 
@@ -68,13 +68,6 @@ const PROFILES: Profile[] = [
   },
 ];
 
-const STATS = [
-  { value: '5,000+', label: 'Profiles' },
-  { value: '500+', label: 'Success Stories' },
-  { value: '12', label: 'Districts Covered' },
-  { value: '15+', label: 'Years of Service' },
-];
-
 const STEPS = [
   {
     step: 1,
@@ -102,18 +95,11 @@ export default function MatrimonyPage() {
       {/* 1. Hero Section */}
       <section className="bg-brand-dark text-white py-16">
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="text-sm text-gray-500 mb-6">
-            <Link href="/" className="hover:text-gray-300 transition-colors">
-              Home
-            </Link>
-            <span className="mx-2">/</span>
-            <span className="text-gray-400">Matrimony</span>
-          </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Column: Text & Badges */}
             <div>
               <span className="text-brand-gold text-sm font-bold uppercase tracking-widest mb-3 block">
-                Trusted Matrimony Since 2010
+                Trusted Matrimony
               </span>
               <h1 className="font-serif text-4xl md:text-5xl font-bold mb-4 leading-tight">
                 Find Your Perfect Match
@@ -148,16 +134,33 @@ export default function MatrimonyPage() {
         </div>
       </section>
 
-      {/* 2. Stats Ribbon */}
-      <section className="bg-brand-cream border-y border-brand-border py-8">
+      {/* 2. Traditional Kalyanam Showcase */}
+      <section className="py-12 bg-white border-b border-brand-border/60">
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            {STATS.map((stat) => (
-              <div key={stat.label}>
-                <div className="text-3xl font-serif font-bold text-brand-red">{stat.value}</div>
-                <div className="text-sm text-brand-muted mt-1">{stat.label}</div>
+          <div className="bg-brand-cream rounded-2xl border border-brand-border overflow-hidden grid grid-cols-1 md:grid-cols-2 items-center shadow-card">
+            <div className="relative h-72 md:h-full min-h-[320px]">
+              <Image
+                src="/images/matrimony.jpg"
+                alt="Hindu Wedding Traditions - Chattada Sri Vaishnava Kalyanam"
+                fill
+                className="object-cover"
+              />
+            </div>
+            <div className="p-8 md:p-12">
+              <span className="text-brand-red font-semibold text-xs uppercase tracking-wider mb-2 block">
+                Sacred Alliances
+              </span>
+              <h2 className="font-serif text-2xl md:text-3xl font-bold text-brand-dark mb-4">
+                Honoring Sri Vaishnava Wedding Traditions
+              </h2>
+              <p className="text-brand-muted text-sm leading-relaxed mb-6">
+                Rooted in Vedic rituals, mutual respect, and family values, our matrimony platform helps Sri Vaishnava families connect with verified alliances across Telangana and beyond.
+              </p>
+              <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-brand-dark">
+                <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-brand-red" /> Verified Profiles</span>
+                <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-brand-red" /> Community Centric</span>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>

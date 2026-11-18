@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import Link from 'next/link';
 import { ZoomIn } from 'lucide-react';
 import GalleryFilter from '@/components/GalleryFilter';
 
@@ -127,13 +126,6 @@ export default function GalleryPage() {
           <p className="text-gray-400">
             Cherished moments from our community events, festivals, and celebrations.
           </p>
-          <div className="text-sm text-gray-500 mt-4">
-            <Link href="/" className="hover:text-gray-300 transition-colors">
-              Home
-            </Link>
-            <span className="mx-2">/</span>
-            <span className="text-gray-400">Gallery</span>
-          </div>
         </div>
       </section>
 

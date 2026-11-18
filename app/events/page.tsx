@@ -94,13 +94,6 @@ export default function EventsPage() {
           <p className="text-gray-400">
             Stay updated with the latest events, festivals, and gatherings of our Sangham.
           </p>
-          <div className="text-sm text-gray-500 mt-4">
-            <Link href="/" className="hover:text-gray-300 transition-colors">
-              Home
-            </Link>
-            <span className="mx-2">/</span>
-            <span className="text-gray-400">Events</span>
-          </div>
         </div>
       </section>
 
