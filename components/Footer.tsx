@@ -1,6 +1,10 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { User, Facebook, Instagram, Youtube, MapPin, Phone, Mail } from 'lucide-react';
 import Logo from '@/components/Logo';
+import { DEFAULT_CONTENT, getStoredContent, SiteContent } from '@/lib/contentStore';
 
 const quickLinks = [
   { label: 'Home', href: '/' },
@@ -18,6 +22,17 @@ const communityLinks = [
 ];
 
 export default function Footer() {
+  const [contact, setContact] = useState<SiteContent['contact']>(DEFAULT_CONTENT.contact);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const loadContent = () => setContact(getStoredContent().contact);
+      loadContent();
+      window.addEventListener('csvs_content_updated', loadContent);
+      return () => window.removeEventListener('csvs_content_updated', loadContent);
+    }
+  }, []);
+
   return (
     <footer id="contact" className="bg-brand-dark border-t-4 border-brand-red pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -55,7 +70,7 @@ export default function Footer() {
               </a>
               <a
                 href="#"
-                aria-label="Youtube"
+                aria-label="YouTube"
                 className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-brand-gold transition-colors"
               >
                 <Youtube className="w-4 h-4" />
@@ -110,31 +125,31 @@ export default function Footer() {
               <li className="flex items-center gap-3">
                 <User className="text-brand-gold w-4 h-4 shrink-0" />
                 <span className="text-white text-sm font-semibold">
-                  J Ravi Chandar
+                  {contact.personName}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin className="text-brand-gold w-4 h-4 mt-0.5 shrink-0" />
                 <span className="text-gray-400 text-sm">
-                  Ambedkar Colony, Nizamabad, Telangana 503002
+                  {contact.address}
                 </span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="text-brand-gold w-4 h-4 shrink-0" />
                 <a
-                  href="tel:+919848765051"
+                  href={`tel:${contact.phone.replace(/\s+/g, '')}`}
                   className="text-gray-400 text-sm hover:text-white transition-colors font-medium"
                 >
-                  +91 98487 65051
+                  {contact.phone}
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="text-brand-gold w-4 h-4 shrink-0" />
                 <a
-                  href="mailto:csvsangham@gmail.com"
+                  href={`mailto:${contact.email}`}
                   className="text-gray-400 text-sm hover:text-white transition-colors"
                 >
-                  csvsangham@gmail.com
+                  {contact.email}
                 </a>
               </li>
             </ul>

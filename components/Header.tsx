@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { User, Menu, X } from 'lucide-react';
+import { User, Menu, X, ShieldCheck } from 'lucide-react';
 import Logo from '@/components/Logo';
 
 const navLinks = [
@@ -16,7 +16,20 @@ const navLinks = [
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const checkAdmin = () => {
+        const token = localStorage.getItem('csvs_admin_token') || sessionStorage.getItem('csvs_admin_token');
+        setIsAdmin(token === 'csvs_authenticated');
+      };
+      checkAdmin();
+      window.addEventListener('storage', checkAdmin);
+      return () => window.removeEventListener('storage', checkAdmin);
+    }
+  }, [pathname]);
 
   const isLinkActive = (href: string) => {
     if (href === '/') return pathname === '/';
@@ -61,11 +74,15 @@ export default function Header() {
           {/* Auth Button (desktop) */}
           <div className="hidden md:flex items-center">
             <Link
-              href="#"
-              className="flex items-center gap-2 bg-brand-red text-white hover:bg-brand-redhover px-6 py-2 rounded-md shadow-sm text-sm font-medium transition-colors"
+              href="/admin"
+              className={`flex items-center gap-2 px-5 py-2 rounded-md shadow-xs text-sm font-medium transition-colors ${
+                isAdmin
+                  ? 'bg-slate-800 text-white hover:bg-slate-900 border border-slate-700'
+                  : 'bg-brand-red text-white hover:bg-brand-redhover'
+              }`}
             >
-              <User className="w-4 h-4" />
-              Login
+              {isAdmin ? <ShieldCheck className="w-4 h-4 text-emerald-400" /> : <User className="w-4 h-4" />}
+              {isAdmin ? 'Admin Portal' : 'Login'}
             </Link>
           </div>
 
@@ -102,12 +119,12 @@ export default function Header() {
               );
             })}
             <Link
-              href="#"
+              href="/admin"
               onClick={() => setMobileOpen(false)}
               className="mt-2 flex items-center gap-2 bg-brand-red text-white hover:bg-brand-redhover px-6 py-2 rounded-md shadow-sm text-sm font-medium transition-colors w-full justify-center"
             >
-              <User className="w-4 h-4" />
-              Login
+              {isAdmin ? <ShieldCheck className="w-4 h-4 text-emerald-400" /> : <User className="w-4 h-4" />}
+              {isAdmin ? 'Admin Portal' : 'Login'}
             </Link>
           </nav>
         </div>

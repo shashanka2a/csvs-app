@@ -1,64 +1,10 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { CalendarDays, MapPin, Clock, ArrowRight } from 'lucide-react';
-
-interface FeaturedEvent {
-  id: number;
-  title: string;
-  month: string;
-  day: string;
-  year: string;
-  time: string;
-  location: string;
-  category: 'Spiritual' | 'Community' | 'Celebration';
-  description: string;
-  image: string;
-}
-
-const featuredEvents: FeaturedEvent[] = [
-  {
-    id: 1,
-    title: 'Community Spiritual Talk & Gathering',
-    month: 'DEC',
-    day: '05',
-    year: '2026',
-    time: '10:00 AM – 1:00 PM',
-    location: 'Nizamabad Central',
-    category: 'Spiritual',
-    description:
-      'An inspiring talk on community traditions and family values, followed by traditional prasadam and blessings.',
-    image:
-      'https://images.unsplash.com/photo-1669394377141-490dc8776678?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 2,
-    title: 'Annual Community Meeting',
-    month: 'DEC',
-    day: '15',
-    year: '2026',
-    time: '4:00 PM – 7:30 PM',
-    location: 'Bodhan',
-    category: 'Community',
-    description:
-      'An annual get-together for families, youth, and organizers to discuss community support programs and upcoming activities.',
-    image:
-      'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 3,
-    title: 'Festival of Lights Celebration',
-    month: 'JAN',
-    day: '08',
-    year: '2027',
-    time: '6:00 PM – 9:00 PM',
-    location: 'Armoor',
-    category: 'Celebration',
-    description:
-      'Traditional lighting of lamps, devotional songs, and a warm dinner together with community families.',
-    image:
-      'https://images.unsplash.com/photo-1508261301902-127bcfb92787?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-  },
-];
+import { FeaturedEvent, DEFAULT_CONTENT, getStoredContent } from '@/lib/contentStore';
 
 const categoryColorMap: Record<FeaturedEvent['category'], string> = {
   Spiritual: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -67,6 +13,17 @@ const categoryColorMap: Record<FeaturedEvent['category'], string> = {
 };
 
 export default function EventsSection() {
+  const [events, setEvents] = useState<FeaturedEvent[]>(DEFAULT_CONTENT.events);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const loadContent = () => setEvents(getStoredContent().events);
+      loadContent();
+      window.addEventListener('csvs_content_updated', loadContent);
+      return () => window.removeEventListener('csvs_content_updated', loadContent);
+    }
+  }, []);
+
   return (
     <section id="events" className="py-20 bg-white border-t border-brand-border/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -86,7 +43,7 @@ export default function EventsSection() {
 
         {/* Events Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          {featuredEvents.map((event) => (
+          {events.map((event) => (
             <article
               key={event.id}
               className="bg-white rounded-2xl overflow-hidden border border-brand-border/80 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col group hover:-translate-y-1"
@@ -105,7 +62,7 @@ export default function EventsSection() {
                 {/* Category Pill */}
                 <div className="absolute top-4 left-4">
                   <span
-                    className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border shadow-sm ${categoryColorMap[event.category]}`}
+                    className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border shadow-sm ${categoryColorMap[event.category] || 'bg-slate-100 text-slate-800'}`}
                   >
                     {event.category}
                   </span>

@@ -1,8 +1,27 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Images } from 'lucide-react';
+import { GalleryPhoto, DEFAULT_PHOTOS, getStoredPhotos } from '@/lib/contentStore';
 
 export default function GallerySection() {
+  const [photos, setPhotos] = useState<GalleryPhoto[]>(DEFAULT_PHOTOS);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const loadPhotos = () => setPhotos(getStoredPhotos());
+      loadPhotos();
+      window.addEventListener('csvs_photos_updated', loadPhotos);
+      return () => window.removeEventListener('csvs_photos_updated', loadPhotos);
+    }
+  }, []);
+
+  const p1 = photos[0] || DEFAULT_PHOTOS[0];
+  const p2 = photos[1] || DEFAULT_PHOTOS[1];
+  const p3 = photos[2] || DEFAULT_PHOTOS[2];
+
   return (
     <section id="gallery" className="py-20 bg-slate-50 border-t border-brand-border/60">
       <div className="container mx-auto px-4 lg:px-8">
@@ -24,15 +43,15 @@ export default function GallerySection() {
           {/* Left — large image */}
           <div className="relative group overflow-hidden rounded-2xl h-72 md:h-full min-h-[300px] bg-brand-cream border border-brand-border/80 shadow-sm">
             <Image
-              src="/images/1.jpg"
-              alt="Community Gathering"
+              src={p1.url}
+              alt={p1.title}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-500"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent flex items-end p-6">
               <h4 className="text-white font-bold text-lg">
-                Community Gathering
+                {p1.title}
               </h4>
             </div>
           </div>
@@ -42,15 +61,15 @@ export default function GallerySection() {
             {/* Top */}
             <div className="relative group overflow-hidden rounded-2xl h-48 md:h-56 bg-brand-cream border border-brand-border/80 shadow-sm">
               <Image
-                src="/images/2.jpg"
-                alt="Festive Celebrations"
+                src={p2.url}
+                alt={p2.title}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent flex items-end p-6">
                 <h4 className="text-white font-bold text-lg">
-                  Festive Celebrations
+                  {p2.title}
                 </h4>
               </div>
             </div>
@@ -58,15 +77,15 @@ export default function GallerySection() {
             {/* Bottom */}
             <div className="relative group overflow-hidden rounded-2xl h-48 md:h-56 bg-brand-cream border border-brand-border/80 shadow-sm">
               <Image
-                src="/images/3.jpg"
-                alt="Cultural Events"
+                src={p3.url}
+                alt={p3.title}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent flex items-end p-6">
                 <h4 className="text-white font-bold text-lg">
-                  Cultural Events
+                  {p3.title}
                 </h4>
               </div>
             </div>
