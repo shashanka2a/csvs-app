@@ -1,6 +1,5 @@
 import HeroSection from '@/components/HeroSection'
 import GallerySection from '@/components/GallerySection'
-import MatrimonySection from '@/components/MatrimonySection'
 import MembersSection from '@/components/MembersSection'
 
 export default function HomePage() {
@@ -8,7 +7,6 @@ export default function HomePage() {
     <main>
       <HeroSection />
       <GallerySection />
-      <MatrimonySection />
       <MembersSection />
     </main>
   )

@@ -3,8 +3,7 @@ import { Facebook, Instagram, Youtube, MapPin, Phone, Mail } from 'lucide-react'
 import Logo from '@/components/Logo';
 
 const matrimonyLinks = [
-  { label: 'Search Profiles', href: '/matrimony' },
-  { label: 'Membership', href: '/matrimony' },
+  { label: 'Matrimony (Coming Soon)', href: '/matrimony' },
   { label: 'Privacy Policy', href: '#' },
 ];
 
@@ -108,16 +107,26 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <MapPin className="text-brand-gold w-4 h-4 mt-0.5 shrink-0" />
                 <span className="text-gray-400 text-sm">
-                  CSVS Head Office, Hyderabad, Telangana, India.
+                  Ambedkar Colony, Nizamabad, Telangana 503002
                 </span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="text-brand-gold w-4 h-4 shrink-0" />
-                <span className="text-gray-400 text-sm">+91 98765 43210</span>
+                <a
+                  href="tel:+919848765051"
+                  className="text-gray-400 text-sm hover:text-white transition-colors"
+                >
+                  +91 98487 65051
+                </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="text-brand-gold w-4 h-4 shrink-0" />
-                <span className="text-gray-400 text-sm">support@csvs.org</span>
+                <a
+                  href="mailto:support@csvs.org"
+                  className="text-gray-400 text-sm hover:text-white transition-colors"
+                >
+                  support@csvs.org
+                </a>
               </li>
             </ul>
           </div>

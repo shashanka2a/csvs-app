@@ -6,10 +6,10 @@ import { usePathname } from 'next/navigation';
 import { User, Menu, X } from 'lucide-react';
 import Logo from '@/components/Logo';
 
-const navLinks = [
+const navLinks: { label: string; href: string; badge?: string }[] = [
   { label: 'Home', href: '/' },
   { label: 'Members', href: '/members' },
-  { label: 'Matrimony', href: '/matrimony' },
+  { label: 'Matrimony', href: '/matrimony', badge: 'Coming Soon' },
   { label: 'Events', href: '/events' },
   { label: 'Gallery', href: '/gallery' },
 ];
@@ -48,11 +48,16 @@ export default function Header() {
                   href={link.href}
                   className={
                     active
-                      ? 'text-brand-red border-b-2 border-brand-red pb-0.5 text-sm font-semibold'
-                      : 'text-brand-dark text-sm font-medium hover:text-brand-red transition-colors'
+                      ? 'text-brand-red border-b-2 border-brand-red pb-0.5 text-sm font-semibold flex items-center gap-1.5'
+                      : 'text-brand-dark text-sm font-medium hover:text-brand-red transition-colors flex items-center gap-1.5'
                   }
                 >
-                  {link.label}
+                  <span>{link.label}</span>
+                  {link.badge && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-brand-gold/15 text-brand-gold">
+                      {link.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -93,11 +98,16 @@ export default function Header() {
                   onClick={() => setMobileOpen(false)}
                   className={
                     active
-                      ? 'text-brand-red font-semibold py-2 px-3 rounded-md bg-red-50'
-                      : 'text-brand-dark font-medium py-2 px-3 rounded-md hover:bg-gray-50 hover:text-brand-red transition-colors'
+                      ? 'text-brand-red font-semibold py-2 px-3 rounded-md bg-red-50 flex items-center justify-between'
+                      : 'text-brand-dark font-medium py-2 px-3 rounded-md hover:bg-gray-50 hover:text-brand-red transition-colors flex items-center justify-between'
                   }
                 >
-                  {link.label}
+                  <span>{link.label}</span>
+                  {link.badge && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-brand-gold/15 text-brand-gold">
+                      {link.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}
