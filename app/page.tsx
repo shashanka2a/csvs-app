@@ -1,7 +1,6 @@
 import HeroSection from '@/components/HeroSection';
 import EventsSection from '@/components/EventsSection';
 import GallerySection from '@/components/GallerySection';
-import MembersSection from '@/components/MembersSection';
 
 export default function HomePage() {
   return (
@@ -9,7 +8,6 @@ export default function HomePage() {
       <HeroSection />
       <EventsSection />
       <GallerySection />
-      <MembersSection />
     </main>
   );
 }

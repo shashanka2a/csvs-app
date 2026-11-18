@@ -13,13 +13,13 @@ export default function HeroSection() {
             <span className="italic">Our Community</span>
           </h1>
           <p className="text-white/90 text-lg mb-8 font-medium max-w-lg leading-relaxed">
-            Our website provides knowledge and support necessary for every person of our community - from daily activities on community to discussions of recent events.
+            Bringing our community together across Telangana — connecting families, celebrating our heritage, and supporting one another.
           </p>
           <Link
             href="/members"
-            className="inline-block bg-brand-red hover:bg-brand-redhover text-white font-medium px-8 py-3 rounded-md transition-colors shadow-lg border border-brand-red/50"
+            className="inline-block bg-brand-red hover:bg-brand-redhover text-white font-medium px-8 py-3 rounded-lg transition-colors shadow-lg border border-brand-red/50"
           >
-            Explore
+            Explore Community
           </Link>
         </div>
       </div>

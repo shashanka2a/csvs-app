@@ -10,7 +10,7 @@ interface FeaturedEvent {
   year: string;
   time: string;
   location: string;
-  category: 'Spiritual' | 'Community' | 'Cultural';
+  category: 'Spiritual' | 'Community' | 'Celebration';
   description: string;
   image: string;
 }
@@ -18,7 +18,7 @@ interface FeaturedEvent {
 const featuredEvents: FeaturedEvent[] = [
   {
     id: 1,
-    title: 'Sri Vaishnava Pravachanam & Satsang',
+    title: 'Community Spiritual Talk & Gathering',
     month: 'DEC',
     day: '05',
     year: '2026',
@@ -26,35 +26,35 @@ const featuredEvents: FeaturedEvent[] = [
     location: 'Nizamabad Central',
     category: 'Spiritual',
     description:
-      'Sacred spiritual discourse on Sri Vaishnava traditions and philosophy, followed by traditional prasadam distribution.',
+      'An inspiring talk on community traditions and family values, followed by traditional prasadam and blessings.',
     image:
       'https://images.unsplash.com/photo-1669394377141-490dc8776678?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
   },
   {
     id: 2,
-    title: 'Community Sadas & Annual Sangham Meet',
+    title: 'Annual Community Meeting',
     month: 'DEC',
     day: '15',
     year: '2026',
     time: '4:00 PM – 7:30 PM',
-    location: 'Bodhan Mandal',
+    location: 'Bodhan',
     category: 'Community',
     description:
-      'Annual regional gathering of Sangham conveners, families, and youth to discuss welfare initiatives and upcoming programs.',
+      'An annual get-together for families, youth, and organizers to discuss community support programs and upcoming activities.',
     image:
       'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
   },
   {
     id: 3,
-    title: 'Karthika Deepotsavam & Bhajan Sandhya',
+    title: 'Festival of Lights Celebration',
     month: 'JAN',
     day: '08',
     year: '2027',
     time: '6:00 PM – 9:00 PM',
-    location: 'Armoor Town',
-    category: 'Cultural',
+    location: 'Armoor',
+    category: 'Celebration',
     description:
-      'Grand community celebration with sacred deepam lighting, devotional bhajans, and Sri Vishnu Sahasranama parayanam.',
+      'Traditional lighting of lamps, devotional songs, and a warm dinner together with community families.',
     image:
       'https://images.unsplash.com/photo-1508261301902-127bcfb92787?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
   },
@@ -63,7 +63,7 @@ const featuredEvents: FeaturedEvent[] = [
 const categoryColorMap: Record<FeaturedEvent['category'], string> = {
   Spiritual: 'bg-amber-100 text-amber-800 border-amber-200',
   Community: 'bg-blue-100 text-blue-800 border-blue-200',
-  Cultural: 'bg-rose-100 text-rose-800 border-rose-200',
+  Celebration: 'bg-rose-100 text-rose-800 border-rose-200',
 };
 
 export default function EventsSection() {
@@ -73,14 +73,14 @@ export default function EventsSection() {
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="text-brand-gold text-sm font-bold tracking-widest uppercase mb-2 block">
-            Upcoming Gatherings &amp; Utsavam
+            Upcoming Gatherings
           </span>
           <h2 className="text-3xl md:text-5xl font-serif text-brand-dark font-bold mb-4">
-            Sangham Events &amp; Festivities
+            Community Events
           </h2>
           <p className="text-brand-muted text-base md:text-lg leading-relaxed">
-            Participate in our vibrant community meetings, traditional festivals, and sacred discourses
-            bringing families together across Nizamabad, Armoor, and Bodhan.
+            Join our community get-togethers, family meetings, and festive celebrations
+            across Nizamabad, Armoor, and Bodhan.
           </p>
         </div>
 
@@ -151,7 +151,7 @@ export default function EventsSection() {
                     href="/events"
                     className="inline-flex items-center gap-2 text-sm font-semibold text-brand-red hover:text-brand-redhover transition-colors group-hover:translate-x-1 duration-200"
                   >
-                    <span>View Event Details</span>
+                    <span>View Details</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
@@ -167,7 +167,7 @@ export default function EventsSection() {
             className="inline-flex items-center gap-2 bg-brand-red hover:bg-brand-redhover text-white font-medium px-8 py-3 rounded-lg transition-colors shadow-sm text-sm"
           >
             <CalendarDays className="w-4 h-4" />
-            <span>Explore All Events &amp; Utsavams</span>
+            <span>View All Events</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

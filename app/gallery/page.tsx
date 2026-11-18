@@ -20,98 +20,98 @@ interface GalleryItem {
 const galleryItems: GalleryItem[] = [
   {
     id: 1,
-    url: 'https://images.unsplash.com/photo-1508261301902-127bcfb92787?w=600&q=80',
+    url: '/images/1.jpg',
     width: 600,
-    height: 300,
-    title: 'Diwali 2025',
-    tag: 'Festivals',
+    height: 340,
+    title: 'Community Gathering',
+    tag: 'Community',
   },
   {
     id: 2,
-    url: 'https://images.unsplash.com/photo-1552589578-8cfbc443ceb6?w=600&q=80',
+    url: '/images/2.jpg',
     width: 600,
-    height: 400,
-    title: 'Wedding Ceremony',
-    tag: 'Weddings',
+    height: 340,
+    title: 'Festive Celebrations',
+    tag: 'Festivals',
   },
   {
     id: 3,
-    url: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?w=600&q=80',
+    url: '/images/3.jpg',
     width: 600,
-    height: 250,
-    title: 'Community Meetup',
+    height: 340,
+    title: 'Community Meeting',
     tag: 'Community',
   },
   {
     id: 4,
-    url: 'https://images.unsplash.com/photo-1600096194534-95cf5ece04cf?w=600&q=80',
+    url: '/images/4.jpg',
     width: 600,
-    height: 350,
-    title: 'Vinayaka Chavithi',
+    height: 340,
+    title: 'Cultural Program',
     tag: 'Cultural',
   },
   {
     id: 5,
-    url: 'https://images.unsplash.com/photo-1604085572504-a392ddf0d86a?w=600&q=80',
+    url: '/images/5.jpg',
     width: 600,
-    height: 300,
-    title: 'Annual Gathering',
+    height: 340,
+    title: 'Family Gathering',
     tag: 'Community',
   },
   {
     id: 6,
-    url: 'https://images.unsplash.com/photo-1791988913635-74ced97e6a95?w=600&q=80',
+    url: '/images/6.jpg',
     width: 600,
-    height: 400,
-    title: 'Temple Bells & Floral Garlands',
+    height: 340,
+    title: 'Traditional Celebrations',
     tag: 'Cultural',
   },
   {
     id: 7,
-    url: 'https://images.unsplash.com/photo-1669394377141-490dc8776678?w=600&q=80',
+    url: '/images/7.jpg',
     width: 600,
-    height: 300,
-    title: 'Karthika Deepotsavam',
+    height: 340,
+    title: 'Festival of Lights',
     tag: 'Festivals',
   },
   {
     id: 8,
-    url: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=600&q=80',
+    url: '/images/8.jpg',
     width: 600,
-    height: 350,
-    title: 'Kalyana Mahotsavam Rituals',
-    tag: 'Weddings',
+    height: 340,
+    title: 'Community Assembly',
+    tag: 'Community',
   },
   {
     id: 9,
-    url: 'https://images.unsplash.com/photo-1508261301902-127bcfb92787?w=600&q=80',
+    url: '/images/9.jpg',
     width: 600,
-    height: 350,
-    title: 'Traditional Lamps & Utsavam',
-    tag: 'Festivals',
+    height: 340,
+    title: 'Traditional Ceremony',
+    tag: 'Cultural',
   },
   {
     id: 10,
-    url: 'https://images.unsplash.com/photo-1575989762363-c7ce0137427a?w=600&q=80',
+    url: '/images/10.jpg',
     width: 600,
-    height: 300,
-    title: 'Deepavali Pooja Lights',
-    tag: 'Festivals',
+    height: 340,
+    title: 'Sangham Members Meet',
+    tag: 'Community',
   },
   {
     id: 11,
-    url: 'https://images.unsplash.com/photo-1604085572504-a392ddf0d86a?w=600&q=80',
+    url: '/images/11.jpg',
     width: 600,
-    height: 400,
-    title: 'Pushpalankara Utsavam',
+    height: 340,
+    title: 'Annual Celebrations',
     tag: 'Festivals',
   },
   {
     id: 12,
-    url: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?w=600&q=80',
+    url: '/images/12.jpg',
     width: 600,
-    height: 280,
-    title: 'Group Photo',
+    height: 340,
+    title: 'Community Group Photo',
     tag: 'Community',
   },
 ];
@@ -138,38 +138,37 @@ export default function GalleryPage() {
 
       {/* 3. Gallery masonry grid */}
       <section className="container mx-auto px-4 lg:px-8 py-12">
-        <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
           {galleryItems.map((item) => (
             <div
               key={item.id}
-              className="break-inside-avoid relative group overflow-hidden rounded-xl border border-brand-border cursor-pointer"
+              className="relative group overflow-hidden rounded-xl bg-brand-cream border border-brand-border/60 shadow-card break-inside-avoid"
             >
-              <Image
-                src={item.url}
-                alt={item.title}
-                width={item.width}
-                height={item.height}
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                className="w-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <ZoomIn className="w-8 h-8 text-white" />
+              <div className="relative w-full aspect-[16/10] overflow-hidden">
+                <Image
+                  src={item.url}
+                  alt={item.title}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                />
               </div>
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-white text-sm font-medium">
-                {item.title}
+
+              {/* Tag pill top-right */}
+              <span className="absolute top-3 right-3 bg-white/90 backdrop-blur-xs text-brand-dark text-xs font-semibold px-2.5 py-0.5 rounded-full shadow-sm">
+                {item.tag}
+              </span>
+
+              {/* Hover overlay with title */}
+              <div className="absolute inset-0 bg-brand-dark/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                <p className="text-white font-serif font-semibold text-lg">{item.title}</p>
+                <div className="flex items-center gap-1 text-brand-gold text-xs mt-1">
+                  <ZoomIn className="w-3.5 h-3.5" />
+                  <span>View photo</span>
+                </div>
               </div>
             </div>
           ))}
-        </div>
-
-        {/* 4. Load More button */}
-        <div className="text-center py-8">
-          <button
-            type="button"
-            className="bg-white border border-brand-border text-brand-dark hover:bg-brand-cream font-medium px-8 py-2.5 rounded-md transition-colors"
-          >
-            Load More
-          </button>
         </div>
       </section>
     </div>
