@@ -5,8 +5,8 @@ import Logo from '@/components/Logo';
 const quickLinks = [
   { label: 'Home', href: '/' },
   { label: 'Members', href: '/members' },
-  { label: 'Gallery', href: '/gallery' },
   { label: 'Events', href: '/events' },
+  { label: 'Gallery', href: '/gallery' },
   { label: 'Contact Us', href: '#contact' },
 ];
 
@@ -131,10 +131,10 @@ export default function Footer() {
               <li className="flex items-center gap-3">
                 <Mail className="text-brand-gold w-4 h-4 shrink-0" />
                 <a
-                  href="mailto:support@csvs.org"
+                  href="mailto:csvsangham@gmail.com"
                   className="text-gray-400 text-sm hover:text-white transition-colors"
                 >
-                  support@csvs.org
+                  csvsangham@gmail.com
                 </a>
               </li>
             </ul>

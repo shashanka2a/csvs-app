@@ -136,8 +136,8 @@ export default function MatrimonyPage() {
                 <Mail className="w-5 h-5 text-brand-gold shrink-0 mt-0.5" />
                 <div>
                   <p className="font-bold text-brand-dark text-xs uppercase tracking-wider mb-1">Email Inquiries</p>
-                  <a href="mailto:support@csvs.org" className="text-brand-dark font-medium hover:text-brand-red transition-colors">
-                    support@csvs.org
+                  <a href="mailto:csvsangham@gmail.com" className="text-brand-dark font-medium hover:text-brand-red transition-colors">
+                    csvsangham@gmail.com
                   </a>
                 </div>
               </div>
