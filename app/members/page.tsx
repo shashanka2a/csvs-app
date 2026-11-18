@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Search, RefreshCw, Briefcase, CheckCircle2 } from 'lucide-react';
+import { User, Search, RefreshCw, Briefcase, CheckCircle2, ChevronDown } from 'lucide-react';
 import type { CommunityMember } from '@/app/api/members/route';
 
 const INITIAL_MEMBERS: CommunityMember[] = [
@@ -149,16 +149,19 @@ export default function MembersPage() {
 
             {/* District dropdown & Live Sync indicator */}
             <div className="flex items-center gap-3">
-              <select
-                value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-                className="border border-brand-border rounded-lg px-3.5 py-2 text-sm bg-white text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-red cursor-pointer shadow-2xs font-medium"
-              >
-                <option value="All">All Districts</option>
-                <option value="Nizamabad">Nizamabad</option>
-                <option value="Armoor">Armoor</option>
-                <option value="Bodhan">Bodhan</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                  className="appearance-none border border-brand-border rounded-lg pl-3.5 pr-9 py-2 text-sm bg-white text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-red cursor-pointer shadow-2xs font-medium"
+                >
+                  <option value="All">All Districts</option>
+                  <option value="Nizamabad">Nizamabad</option>
+                  <option value="Armoor">Armoor</option>
+                  <option value="Bodhan">Bodhan</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-muted pointer-events-none" />
+              </div>
 
               <button
                 type="button"
@@ -183,7 +186,7 @@ export default function MembersPage() {
           </p>
           <span className="inline-flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full font-medium border border-emerald-200">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Connected to Sangham Sheet</span>
+            <span>Connected</span>
           </span>
         </div>
 
