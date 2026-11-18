@@ -29,13 +29,13 @@ export default function GalleryPage() {
         </div>
       </section>
 
-      {/* 2. Gallery grid */}
+      {/* 2. Gallery grid (row-wise order) */}
       <section className="container mx-auto px-4 lg:px-8 py-12">
-        <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {photos.map((item) => (
             <div
               key={item.id}
-              className="relative group overflow-hidden rounded-2xl bg-brand-cream border border-brand-border/60 shadow-card break-inside-avoid"
+              className="relative group overflow-hidden rounded-2xl bg-brand-cream border border-brand-border/60 shadow-card"
             >
               <div className="relative w-full aspect-[16/10] overflow-hidden">
                 <Image
