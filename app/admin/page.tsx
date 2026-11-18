@@ -450,7 +450,7 @@ export default function AdminPage() {
                     <div className="relative w-24 h-16 rounded-lg overflow-hidden bg-brand-cream border border-brand-border shrink-0">
                       <Image
                         src={photo.url}
-                        alt={photo.title}
+                        alt={`Photo ${index + 1}`}
                         fill
                         className="object-cover"
                         sizes="96px"
