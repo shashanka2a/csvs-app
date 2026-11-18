@@ -56,7 +56,9 @@ export default function AdminPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // New photo input state
-  const [newPhotoUrl, setNewPhotoUrl] = useState<string>('/images/1.jpg');
+  const [newPhotoUrl, setNewPhotoUrl] = useState<string>(
+    'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/1.jpg'
+  );
   const [newPhotoTitle, setNewPhotoTitle] = useState<string>('');
 
   // Check login state on mount
@@ -527,7 +529,7 @@ export default function AdminPage() {
                     className="w-full px-3 py-2 rounded-lg border border-brand-border text-sm text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
                   />
                   <span className="text-[11px] text-brand-muted mt-1 block">
-                    Choose from available local images: <code>/images/1.jpg</code> through <code>/images/7.jpg</code>
+                    Choose from available GitHub / local images (1 to 7)
                   </span>
                 </div>
                 <div>

@@ -48,7 +48,7 @@ export default function MatrimonySection() {
           {/* Right column */}
           <div className="relative">
             <Image
-              src="/images/matrimony.jpg"
+              src="https://www.brides.com/thmb/SIRJavkmShzT9JiP-MxStQIdX_4=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc():focal(532x0:534x2)/Main-Hindu-Wedding-Traditions-Stephanie-Velez-6cf14a902ea947c09dc0722d29a9224a.jpg"
               alt="Traditional Matrimony Kalyana Ceremony"
               width={800}
               height={400}

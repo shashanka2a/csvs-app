@@ -38,13 +38,13 @@ export interface SiteContent {
 }
 
 export const DEFAULT_PHOTOS: GalleryPhoto[] = [
-  { id: 1, url: '/images/1.jpg', order: 1 },
-  { id: 2, url: '/images/2.jpg', order: 2 },
-  { id: 3, url: '/images/3.jpg', order: 3 },
-  { id: 4, url: '/images/4.jpg', order: 4 },
-  { id: 5, url: '/images/5.jpg', order: 5 },
-  { id: 6, url: '/images/6.jpg', order: 6 },
-  { id: 7, url: '/images/7.jpg', order: 7 },
+  { id: 1, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/1.jpg', order: 1 },
+  { id: 2, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/2.jpg', order: 2 },
+  { id: 3, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/3.jpg', order: 3 },
+  { id: 4, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/4.jpg', order: 4 },
+  { id: 5, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/5.jpg', order: 5 },
+  { id: 6, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/6.jpg', order: 6 },
+  { id: 7, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/7.jpg', order: 7 },
 ];
 
 export const DEFAULT_CONTENT: SiteContent = {

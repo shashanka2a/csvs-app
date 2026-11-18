@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         hostname: 'www.brides.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'raw.githubusercontent.com',
+        pathname: '/**',
+      },
     ],
   },
 };
