@@ -36,7 +36,6 @@ export default function MembersSearch() {
               <option value="Nizamabad">Nizamabad</option>
               <option value="Armoor">Armoor</option>
               <option value="Bodhan">Bodhan</option>
-              <option value="Nirmal">Nirmal</option>
             </select>
 
             <select

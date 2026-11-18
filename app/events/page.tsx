@@ -62,9 +62,9 @@ const events: EventItem[] = [
   },
   {
     id: 5,
-    title: 'Apartment Warming – Srinivaspur',
+    title: 'Community Gathering – Srinivaspur',
     date: 'Jan 15, 2027',
-    location: 'Nirmal',
+    location: 'Nizamabad',
     tag: 'Community',
     description: 'Community apartment warming ceremony for new residents.',
   },

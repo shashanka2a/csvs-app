@@ -1,22 +1,25 @@
 import Link from 'next/link';
-import { Facebook, Instagram, Youtube, MapPin, Phone, Mail } from 'lucide-react';
+import { User, Facebook, Instagram, Youtube, MapPin, Phone, Mail } from 'lucide-react';
 import Logo from '@/components/Logo';
 
-const matrimonyLinks = [
-  { label: 'Matrimony (Coming Soon)', href: '/matrimony' },
-  { label: 'Privacy Policy', href: '#' },
+const quickLinks = [
+  { label: 'Home', href: '/' },
+  { label: 'Members', href: '/members' },
+  { label: 'Gallery', href: '/gallery' },
+  { label: 'Events', href: '/events' },
+  { label: 'Contact Us', href: '#contact' },
 ];
 
 const communityLinks = [
   { label: 'About Sangham', href: '/members' },
-  { label: 'Events', href: '/events' },
-  { label: 'Gallery', href: '/gallery' },
   { label: 'Area Representatives', href: '/members' },
+  { label: 'Nizamabad Central', href: '/members' },
+  { label: 'Armoor & Bodhan', href: '/members' },
 ];
 
 export default function Footer() {
   return (
-    <footer className="bg-brand-dark border-t-4 border-brand-red pt-16 pb-8">
+    <footer id="contact" className="bg-brand-dark border-t-4 border-brand-red pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* 4-column grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
@@ -60,13 +63,13 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Column 2: Matrimony */}
+          {/* Column 2: Quick Links */}
           <div>
             <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">
-              Matrimony
+              Quick Links
             </h4>
             <ul className="space-y-2">
-              {matrimonyLinks.map((link) => (
+              {quickLinks.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
@@ -104,6 +107,12 @@ export default function Footer() {
               Contact Us
             </h4>
             <ul className="space-y-3">
+              <li className="flex items-center gap-3">
+                <User className="text-brand-gold w-4 h-4 shrink-0" />
+                <span className="text-white text-sm font-semibold">
+                  J Ravi Chandar
+                </span>
+              </li>
               <li className="flex items-start gap-3">
                 <MapPin className="text-brand-gold w-4 h-4 mt-0.5 shrink-0" />
                 <span className="text-gray-400 text-sm">
@@ -114,7 +123,7 @@ export default function Footer() {
                 <Phone className="text-brand-gold w-4 h-4 shrink-0" />
                 <a
                   href="tel:+919848765051"
-                  className="text-gray-400 text-sm hover:text-white transition-colors"
+                  className="text-gray-400 text-sm hover:text-white transition-colors font-medium"
                 >
                   +91 98487 65051
                 </a>

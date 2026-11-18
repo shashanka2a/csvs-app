@@ -4,13 +4,12 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { User, ArrowRight } from 'lucide-react';
 
-type Area = 'nizamabad' | 'armoor' | 'bodhan' | 'nirmal';
+type Area = 'nizamabad' | 'armoor' | 'bodhan';
 
 const tabs: { id: Area; label: string }[] = [
   { id: 'nizamabad', label: 'Nizamabad' },
   { id: 'armoor', label: 'Armoor' },
   { id: 'bodhan', label: 'Bodhan' },
-  { id: 'nirmal', label: 'Nirmal' },
 ];
 
 interface Member {
@@ -141,14 +140,6 @@ export default function MembersSection() {
           <div className="grid grid-cols-1 gap-6 animate-fade-in">
             <p className="col-span-full text-brand-muted text-center py-12">
               Community members from Bodhan will be listed here.
-            </p>
-          </div>
-        )}
-
-        {activeArea === 'nirmal' && (
-          <div className="grid grid-cols-1 gap-6 animate-fade-in">
-            <p className="col-span-full text-brand-muted text-center py-12">
-              Community members from Nirmal will be listed here.
             </p>
           </div>
         )}

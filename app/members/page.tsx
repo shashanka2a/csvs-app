@@ -57,8 +57,8 @@ const members: Member[] = [
   },
   {
     name: 'Ravi Shankar',
-    district: 'Nirmal',
-    mandal: 'Nirmal Town',
+    district: 'Bodhan',
+    mandal: 'Bodhan Central',
     joined: 2017,
   },
   {
