@@ -263,7 +263,7 @@ export default function AdminPage() {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="admin or csvsangham@gmail.com"
+                  placeholder="Enter username or email"
                   className="w-full px-4 py-3 rounded-lg border border-brand-border text-brand-dark focus:ring-2 focus:ring-brand-red focus:border-brand-red outline-none text-sm transition-all"
                 />
               </div>
@@ -302,22 +302,11 @@ export default function AdminPage() {
             </button>
           </form>
 
-          {/* Demo helper */}
-          <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-            <div className="inline-block bg-brand-cream border border-brand-red/10 rounded-lg p-3 text-left w-full">
-              <div className="flex items-center gap-1.5 text-brand-red font-semibold text-xs mb-1">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Admin Login Access</span>
-              </div>
-              <p className="text-[11px] text-brand-muted">
-                Username: <code className="font-mono font-bold text-brand-dark">admin</code>
-                <br />
-                Password: <code className="font-mono font-bold text-brand-dark">Demo@123</code>
-              </p>
-            </div>
+          {/* Return link */}
+          <div className="mt-8 pt-4 border-t border-gray-100 text-center">
             <Link
               href="/"
-              className="inline-block mt-4 text-xs text-brand-muted hover:text-brand-red transition-colors"
+              className="inline-block text-xs text-brand-muted hover:text-brand-red transition-colors"
             >
               ← Return to CSVS Website
             </Link>
