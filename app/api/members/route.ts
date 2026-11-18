@@ -5,14 +5,9 @@ export interface CommunityMember {
   name: string;
   surname: string;
   fullName: string;
-  gothram: string;
   district: string;
-  address: string;
-  pincode: string;
   occupation: string;
-  phone: string;
-  bloodGroup: string;
-  membershipId: string;
+  membershipId?: string;
 }
 
 const GOOGLE_SHEET_CSV_URL =
@@ -22,86 +17,56 @@ const FALLBACK_MEMBERS: CommunityMember[] = [
   {
     id: '1',
     membershipId: '27',
-    gothram: 'Achyutha',
     surname: 'Jagannatham',
     name: 'Ravi Chandar',
-    fullName: 'Ravi Chandar Jagannatham',
-    address: '11-1-58, Kanteshwear, Telangana.',
+    fullName: 'Jagannatham Ravi Chandar',
     district: 'Nizamabad',
-    pincode: '503002',
     occupation: 'Photographer',
-    phone: '9848765051',
-    bloodGroup: 'B+',
   },
   {
     id: '2',
     membershipId: '27',
-    gothram: 'Achyutha',
     surname: 'Jagannatham',
     name: 'Bharathi',
-    fullName: 'Bharathi Jagannatham',
-    address: '11-1-58, Kanteshwear, Telangana.',
+    fullName: 'Jagannatham Bharathi',
     district: 'Nizamabad',
-    pincode: '503002',
     occupation: 'Home Maker',
-    phone: '9848765051',
-    bloodGroup: 'A+',
   },
   {
     id: '3',
     membershipId: '27',
-    gothram: 'Achyutha',
     surname: 'Jagannatham',
     name: 'Shashank',
-    fullName: 'Shashank Jagannatham',
-    address: '11-1-58, Kanteshwear, Telangana.',
+    fullName: 'Jagannatham Shashank',
     district: 'Nizamabad',
-    pincode: '503002',
     occupation: 'Software',
-    phone: '9848765051',
-    bloodGroup: 'A+',
   },
   {
     id: '4',
     membershipId: '27',
-    gothram: 'Achyutha',
     surname: 'Jagannatham',
     name: 'Shivani',
-    fullName: 'Shivani Jagannatham',
-    address: '11-1-58, Kanteshwear, Telangana.',
+    fullName: 'Jagannatham Shivani',
     district: 'Nizamabad',
-    pincode: '503002',
     occupation: 'M.S In U.S',
-    phone: '9848765051',
-    bloodGroup: 'AB+',
   },
   {
     id: '5',
     membershipId: '27',
-    gothram: 'Achyutha',
     surname: 'Jagannatham',
     name: 'Raghu Chandar',
-    fullName: 'Raghu Chandar Jagannatham',
-    address: '11-1-58, Kanteshwear, Telangana.',
+    fullName: 'Jagannatham Raghu Chandar',
     district: 'Nizamabad',
-    pincode: '503002',
     occupation: 'Photographer',
-    phone: '9848765051',
-    bloodGroup: '',
   },
   {
     id: '6',
     membershipId: '27',
-    gothram: 'Achyutha',
     surname: 'Jagannatham',
     name: 'Soubagya Laxmi',
-    fullName: 'Soubagya Laxmi Jagannatham',
-    address: '11-1-58, Kanteshwear, Telangana.',
+    fullName: 'Jagannatham Soubagya Laxmi',
     district: 'Nizamabad',
-    pincode: '503002',
     occupation: '',
-    phone: '9848765051',
-    bloodGroup: '',
   },
 ];
 
@@ -134,7 +99,15 @@ function parseCsv(text: string): CommunityMember[] {
     return result;
   };
 
-  const headers = parseLine(lines[0]).map((h) => h.toLowerCase());
+  const headers = parseLine(lines[0]).map((h) => h.trim().toLowerCase());
+
+  // Use exact matching so 'name' does not falsely match 'surname'
+  const nameIdx = headers.indexOf('name');
+  const surnameIdx = headers.indexOf('surname');
+  const districtIdx = headers.findIndex((h) => h === 'district/mandal' || h.startsWith('district'));
+  const occupationIdx = headers.indexOf('occupation');
+  const membershipIdx = headers.findIndex((h) => h.includes('membership'));
+
   const members: CommunityMember[] = [];
 
   for (let i = 1; i < lines.length; i++) {
@@ -143,37 +116,25 @@ function parseCsv(text: string): CommunityMember[] {
     const values = parseLine(row);
     if (values.length < 2) continue;
 
-    const getCol = (name: string) => {
-      const idx = headers.findIndex((h) => h.includes(name.toLowerCase()));
-      return idx >= 0 && idx < values.length ? values[idx] : '';
-    };
-
-    const name = getCol('name') || '';
-    const surname = getCol('surname') || '';
+    const name = nameIdx >= 0 && nameIdx < values.length ? values[nameIdx].trim() : '';
+    const surname = surnameIdx >= 0 && surnameIdx < values.length ? values[surnameIdx].trim() : '';
     if (!name && !surname) continue;
 
-    const fullName = `${name} ${surname}`.trim();
-    const gothram = getCol('gothram') || '';
-    const district = getCol('district') || 'Nizamabad';
-    const address = getCol('address') || '';
-    const pincode = getCol('pincode') || '';
-    const occupation = getCol('occupation') || '';
-    const phone = getCol('phone') || '';
-    const bloodGroup = getCol('blood') || '';
-    const membershipId = getCol('membership') || String(i);
+    // Both Surname and Name
+    const fullName = surname && name ? `${surname} ${name}` : (name || surname);
+    const district = districtIdx >= 0 && districtIdx < values.length && values[districtIdx].trim()
+      ? values[districtIdx].trim()
+      : 'Nizamabad';
+    const occupation = occupationIdx >= 0 && occupationIdx < values.length ? values[occupationIdx].trim() : '';
+    const membershipId = membershipIdx >= 0 && membershipIdx < values.length ? values[membershipIdx].trim() : String(i);
 
     members.push({
       id: String(i),
       name,
       surname,
       fullName,
-      gothram,
       district,
-      address,
-      pincode,
       occupation,
-      phone,
-      bloodGroup,
       membershipId,
     });
   }
@@ -185,6 +146,7 @@ export async function GET() {
   try {
     const res = await fetch(GOOGLE_SHEET_CSV_URL, {
       cache: 'no-store',
+      redirect: 'follow',
       headers: {
         'User-Agent': 'CSVS-Portal/1.0',
       },

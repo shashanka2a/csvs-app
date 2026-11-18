@@ -1,93 +1,63 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Search, RefreshCw, Briefcase, Heart, CheckCircle2 } from 'lucide-react';
+import { User, Search, RefreshCw, Briefcase, CheckCircle2 } from 'lucide-react';
 import type { CommunityMember } from '@/app/api/members/route';
 
 const INITIAL_MEMBERS: CommunityMember[] = [
   {
     id: '1',
     membershipId: '27',
-    gothram: 'Achyutha',
     surname: 'Jagannatham',
     name: 'Ravi Chandar',
-    fullName: 'Ravi Chandar Jagannatham',
-    address: '11-1-58, Kanteshwear, Telangana.',
+    fullName: 'Jagannatham Ravi Chandar',
     district: 'Nizamabad',
-    pincode: '503002',
     occupation: 'Photographer',
-    phone: '9848765051',
-    bloodGroup: 'B+',
   },
   {
     id: '2',
     membershipId: '27',
-    gothram: 'Achyutha',
     surname: 'Jagannatham',
     name: 'Bharathi',
-    fullName: 'Bharathi Jagannatham',
-    address: '11-1-58, Kanteshwear, Telangana.',
+    fullName: 'Jagannatham Bharathi',
     district: 'Nizamabad',
-    pincode: '503002',
     occupation: 'Home Maker',
-    phone: '9848765051',
-    bloodGroup: 'A+',
   },
   {
     id: '3',
     membershipId: '27',
-    gothram: 'Achyutha',
     surname: 'Jagannatham',
     name: 'Shashank',
-    fullName: 'Shashank Jagannatham',
-    address: '11-1-58, Kanteshwear, Telangana.',
+    fullName: 'Jagannatham Shashank',
     district: 'Nizamabad',
-    pincode: '503002',
     occupation: 'Software',
-    phone: '9848765051',
-    bloodGroup: 'A+',
   },
   {
     id: '4',
     membershipId: '27',
-    gothram: 'Achyutha',
     surname: 'Jagannatham',
     name: 'Shivani',
-    fullName: 'Shivani Jagannatham',
-    address: '11-1-58, Kanteshwear, Telangana.',
+    fullName: 'Jagannatham Shivani',
     district: 'Nizamabad',
-    pincode: '503002',
     occupation: 'M.S In U.S',
-    phone: '9848765051',
-    bloodGroup: 'AB+',
   },
   {
     id: '5',
     membershipId: '27',
-    gothram: 'Achyutha',
     surname: 'Jagannatham',
     name: 'Raghu Chandar',
-    fullName: 'Raghu Chandar Jagannatham',
-    address: '11-1-58, Kanteshwear, Telangana.',
+    fullName: 'Jagannatham Raghu Chandar',
     district: 'Nizamabad',
-    pincode: '503002',
     occupation: 'Photographer',
-    phone: '9848765051',
-    bloodGroup: '',
   },
   {
     id: '6',
     membershipId: '27',
-    gothram: 'Achyutha',
     surname: 'Jagannatham',
     name: 'Soubagya Laxmi',
-    fullName: 'Soubagya Laxmi Jagannatham',
-    address: '11-1-58, Kanteshwear, Telangana.',
+    fullName: 'Jagannatham Soubagya Laxmi',
     district: 'Nizamabad',
-    pincode: '503002',
     occupation: '',
-    phone: '9848765051',
-    bloodGroup: '',
   },
 ];
 
@@ -106,7 +76,6 @@ export default function MembersPage() {
   const [query, setQuery] = useState('');
   const [district, setDistrict] = useState('All');
   const [loading, setLoading] = useState(false);
-  const [source, setSource] = useState<string>('live');
 
   // Dynamic fetch function
   const fetchMembers = async () => {
@@ -117,7 +86,6 @@ export default function MembersPage() {
         const data = await res.json();
         if (Array.isArray(data.members) && data.members.length > 0) {
           setMembers(data.members);
-          setSource(data.source || 'live');
         }
       }
     } catch (e) {
@@ -139,8 +107,7 @@ export default function MembersPage() {
       m.fullName.toLowerCase().includes(q) ||
       m.name.toLowerCase().includes(q) ||
       m.surname.toLowerCase().includes(q) ||
-      m.occupation.toLowerCase().includes(q) ||
-      m.gothram.toLowerCase().includes(q);
+      m.occupation.toLowerCase().includes(q);
 
     const matchesDistrict = district === 'All' || m.district.toLowerCase() === district.toLowerCase();
 
@@ -241,7 +208,7 @@ export default function MembersPage() {
                     {getInitials(member.fullName) || <User className="text-brand-muted w-8 h-8" />}
                   </div>
 
-                  {/* Full Name */}
+                  {/* Full Name: Surname + Name */}
                   <h3 className="font-serif font-bold text-brand-dark text-lg mb-1 leading-snug">
                     {member.fullName}
                   </h3>
@@ -253,26 +220,15 @@ export default function MembersPage() {
                     </span>
                   </div>
 
-                  {/* Member details: Occupation & Gothram */}
-                  <div className="space-y-1 text-xs text-brand-muted pt-2 border-t border-gray-100">
-                    {member.occupation && (
-                      <p className="flex items-center justify-center gap-1.5 text-brand-dark font-medium">
+                  {/* Member details: Occupation only */}
+                  {member.occupation && (
+                    <div className="pt-2 border-t border-gray-100">
+                      <p className="flex items-center justify-center gap-1.5 text-xs text-brand-dark font-medium">
                         <Briefcase className="w-3.5 h-3.5 text-brand-gold shrink-0" />
                         <span>{member.occupation}</span>
                       </p>
-                    )}
-                    {member.gothram && (
-                      <p className="text-[11px] text-brand-muted">
-                        Gothram: <span className="font-semibold text-brand-dark">{member.gothram}</span>
-                      </p>
-                    )}
-                    {member.bloodGroup && (
-                      <p className="text-[11px] text-brand-muted flex items-center justify-center gap-1">
-                        <Heart className="w-3 h-3 text-rose-500 fill-rose-500" />
-                        <span>Blood Group: <strong className="text-brand-dark">{member.bloodGroup}</strong></span>
-                      </p>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
