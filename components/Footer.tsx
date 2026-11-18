@@ -17,7 +17,7 @@ const quickLinks = [
 const communityLinks = [
   { label: 'About Sangham', href: '/members' },
   { label: 'Area Representatives', href: '/members' },
-  { label: 'Nizamabad Central', href: '/members' },
+  { label: 'Nizamabad', href: '/members' },
   { label: 'Armoor & Bodhan', href: '/members' },
 ];
 
