@@ -513,8 +513,8 @@ export default function AdminPage() {
                 <Plus className="w-4 h-4 text-brand-red" />
                 <span>Add Another Photo to Gallery</span>
               </h3>
-              <form onSubmit={handleAddPhoto} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="sm:col-span-2">
+              <form onSubmit={handleAddPhoto} className="flex flex-col sm:flex-row gap-4 items-end">
+                <div className="flex-grow">
                   <label className="block text-xs font-bold uppercase tracking-wider text-brand-muted mb-1">
                     Photo URL or Local Path
                   </label>
@@ -527,23 +527,10 @@ export default function AdminPage() {
                     className="w-full px-3 py-2 rounded-lg border border-brand-border text-sm text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
                   />
                   <span className="text-[11px] text-brand-muted mt-1 block">
-                    Choose from available: <code>/images/1.jpg</code> through <code>/images/12.jpg</code>
+                    Choose from available local images: <code>/images/1.jpg</code> through <code>/images/7.jpg</code>
                   </span>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-brand-muted mb-1">
-                    Photo Title
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newPhotoTitle}
-                    onChange={(e) => setNewPhotoTitle(e.target.value)}
-                    placeholder="e.g. Festival Gathering"
-                    className="w-full px-3 py-2 rounded-lg border border-brand-border text-sm text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
-                  />
-                </div>
-                <div className="sm:col-span-3 flex justify-end">
                   <button
                     type="submit"
                     className="inline-flex items-center gap-2 bg-brand-red hover:bg-brand-redhover text-white px-5 py-2.5 rounded-lg text-xs font-bold transition-colors shadow-xs"
@@ -925,15 +912,12 @@ export default function AdminPage() {
                 {photos.slice(0, 3).map((p, idx) => (
                   <div
                     key={p.id}
-                    className="relative rounded-xl overflow-hidden border border-brand-border h-48 bg-brand-cream group"
+                    className="relative rounded-xl overflow-hidden border border-brand-border h-48 bg-brand-cream"
                   >
-                    <Image src={p.url} alt={p.title} fill className="object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4">
-                      <span className="text-[10px] font-bold uppercase text-brand-gold">
-                        Position #{idx + 1}
-                      </span>
-                      <p className="text-white font-serif font-bold text-sm">{p.title}</p>
-                    </div>
+                    <Image src={p.url} alt={`Photo ${idx + 1}`} fill className="object-cover" />
+                    <span className="absolute top-2.5 left-2.5 text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-brand-dark/85 text-white shadow-xs">
+                      #{idx + 1}
+                    </span>
                   </div>
                 ))}
               </div>
