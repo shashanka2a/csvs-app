@@ -107,7 +107,8 @@ export default function MembersPage() {
       m.fullName.toLowerCase().includes(q) ||
       m.name.toLowerCase().includes(q) ||
       m.surname.toLowerCase().includes(q) ||
-      m.occupation.toLowerCase().includes(q);
+      m.occupation.toLowerCase().includes(q) ||
+      (m.membershipId && m.membershipId.toLowerCase().includes(q));
 
     const matchesDistrict = district === 'All' || m.district.toLowerCase() === district.toLowerCase();
 
@@ -142,7 +143,7 @@ export default function MembersPage() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search member name, surname, or occupation..."
+                placeholder="Search member name, surname, ID, or occupation..."
                 className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-brand-border rounded-lg text-brand-dark placeholder-brand-muted focus:outline-none focus:ring-2 focus:ring-brand-red focus:bg-white transition-all"
               />
             </div>
@@ -203,8 +204,17 @@ export default function MembersPage() {
             {filtered.map((member) => (
               <div
                 key={member.id}
-                className="bg-white rounded-2xl border border-brand-border/80 shadow-xs hover:shadow-md transition-all duration-300 p-6 text-center flex flex-col justify-between group hover:-translate-y-1"
+                className="relative bg-white rounded-2xl border border-brand-border/80 shadow-xs hover:shadow-md transition-all duration-300 p-6 text-center flex flex-col justify-between group hover:-translate-y-1"
               >
+                {/* Member ID Badge */}
+                {(member.membershipId || member.id) && (
+                  <div className="absolute top-3.5 right-3.5">
+                    <span className="inline-flex items-center text-[10px] font-mono font-bold text-gray-500 bg-gray-100 border border-gray-200/90 px-2 py-0.5 rounded-md">
+                      ID: #{member.membershipId || member.id}
+                    </span>
+                  </div>
+                )}
+
                 <div>
                   {/* Avatar Initials */}
                   <div className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden border-2 border-brand-red/20 bg-brand-red/10 flex items-center justify-center shadow-xs text-brand-red font-serif font-bold text-xl group-hover:scale-105 transition-transform">

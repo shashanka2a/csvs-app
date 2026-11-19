@@ -106,7 +106,9 @@ function parseCsv(text: string): CommunityMember[] {
   const surnameIdx = headers.indexOf('surname');
   const districtIdx = headers.findIndex((h) => h === 'district/mandal' || h.startsWith('district'));
   const occupationIdx = headers.indexOf('occupation');
-  const membershipIdx = headers.findIndex((h) => h.includes('membership'));
+  const membershipIdx = headers.findIndex(
+    (h) => h.includes('membership') || h === 'id' || h.includes('member id') || h === 's.no' || h === 'sl.no'
+  );
 
   const members: CommunityMember[] = [];
 

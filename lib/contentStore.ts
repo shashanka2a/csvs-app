@@ -4,6 +4,8 @@ export interface GalleryPhoto {
   id: number;
   url: string;
   order: number;
+  title?: string;
+  fileName?: string;
 }
 
 export interface FeaturedEvent {
