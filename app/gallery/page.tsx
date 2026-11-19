@@ -26,6 +26,10 @@ export default function GalleryPage() {
   const [activeGroupPhotos, setActiveGroupPhotos] = useState<GalleryItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
 
+  // Touch swipe support for mobile lightbox
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
   const fetchGallery = async () => {
     setLoading(true);
     try {
@@ -73,6 +77,28 @@ export default function GalleryPage() {
     setCurrentIndex(prevIdx);
     setActivePhoto(activeGroupPhotos[prevIdx]);
   }, [currentIndex, activeGroupPhotos]);
+
+  // Swipe gesture handling for mobile
+  const minSwipeDistance = 45;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    if (distance > minSwipeDistance) {
+      showNext();
+    } else if (distance < -minSwipeDistance) {
+      showPrev();
+    }
+  };
 
   // Keyboard navigation for Lightbox
   useEffect(() => {
@@ -234,7 +260,7 @@ export default function GalleryPage() {
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                   />
                   {/* Hover Overlay with Event Name & Date */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-2.5 sm:p-3 flex flex-col justify-end">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent opacity-0 sm:group-hover:opacity-100 transition-opacity p-2.5 sm:p-3 flex flex-col justify-end pointer-events-none">
                     <span className="text-white text-xs font-bold truncate leading-tight drop-shadow-xs">
                       {group.eventName}
                     </span>
@@ -242,7 +268,7 @@ export default function GalleryPage() {
                       <Calendar className="w-3 h-3 text-brand-gold shrink-0" />
                       <span>{group.displayDate}</span>
                     </span>
-                    <div className="absolute top-2 right-2 bg-black/60 text-white p-1 rounded-md opacity-90">
+                    <div className="hidden sm:block absolute top-2 right-2 bg-black/60 text-white p-1 rounded-md opacity-90">
                       <Maximize2 className="w-3 h-3" />
                     </div>
                   </div>
@@ -303,8 +329,8 @@ export default function GalleryPage() {
           </div>
 
           {/* Middle: Main Full-Size Image with Navigation */}
-          <div className="relative flex-grow flex items-center justify-center p-4 sm:p-8 overflow-hidden">
-            {/* Previous Arrow */}
+          <div className="relative flex-grow flex items-center justify-center p-2 sm:p-8 overflow-hidden">
+            {/* Previous Arrow - Desktop / Tablet only so it never blocks image on mobile */}
             {activeGroupPhotos.length > 1 && (
               <button
                 type="button"
@@ -312,15 +338,20 @@ export default function GalleryPage() {
                   e.stopPropagation();
                   showPrev();
                 }}
-                className="absolute left-3 sm:left-6 z-10 p-3 rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/20 transition-transform active:scale-95 cursor-pointer"
+                className="hidden sm:flex absolute left-3 sm:left-6 z-10 p-3 rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/20 transition-transform active:scale-95 cursor-pointer"
                 title="Previous photo (Left arrow)"
               >
                 <ChevronLeft className="w-6 h-6" />
               </button>
             )}
 
-            {/* The Full Image */}
-            <div className="relative max-w-full max-h-[75vh] sm:max-h-[82vh] w-full h-full flex items-center justify-center">
+            {/* The Full Image with mobile touch swipe support */}
+            <div
+              className="relative max-w-full max-h-[75vh] sm:max-h-[82vh] w-full h-full flex items-center justify-center touch-pan-y"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               <img
                 src={activePhoto.url}
                 alt={activePhoto.eventName}
@@ -329,7 +360,7 @@ export default function GalleryPage() {
               />
             </div>
 
-            {/* Next Arrow */}
+            {/* Next Arrow - Desktop / Tablet only so it never blocks image on mobile */}
             {activeGroupPhotos.length > 1 && (
               <button
                 type="button"
@@ -337,7 +368,7 @@ export default function GalleryPage() {
                   e.stopPropagation();
                   showNext();
                 }}
-                className="absolute right-3 sm:right-6 z-10 p-3 rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/20 transition-transform active:scale-95 cursor-pointer"
+                className="hidden sm:flex absolute right-3 sm:right-6 z-10 p-3 rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/20 transition-transform active:scale-95 cursor-pointer"
                 title="Next photo (Right arrow)"
               >
                 <ChevronRight className="w-6 h-6" />
@@ -345,12 +376,42 @@ export default function GalleryPage() {
             )}
           </div>
 
-          {/* Bottom Bar: Thumbnail Strip & Caption */}
+          {/* Bottom Bar: Navigation & Controls */}
           <div
-            className="p-3 sm:p-4 text-center border-t border-white/10 bg-black/40 shrink-0"
+            className="p-3 sm:p-4 border-t border-white/10 bg-black/60 shrink-0"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-xs text-gray-400">
+            {/* Mobile Navigation Controls: Positioned below image so photo is 100% unobstructed */}
+            {activeGroupPhotos.length > 1 && (
+              <div className="flex sm:hidden items-center justify-between gap-3 max-w-xs mx-auto">
+                <button
+                  type="button"
+                  onClick={showPrev}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white/10 active:bg-white/25 text-white text-xs font-medium border border-white/20 transition-colors"
+                  aria-label="Previous photo"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Prev</span>
+                </button>
+
+                <span className="text-xs font-medium text-gray-300 tabular-nums">
+                  {currentIndex + 1} of {activeGroupPhotos.length}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={showNext}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white/10 active:bg-white/25 text-white text-xs font-medium border border-white/20 transition-colors"
+                  aria-label="Next photo"
+                >
+                  <span>Next</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Desktop Navigation Hint */}
+            <p className="hidden sm:block text-xs text-gray-400 text-center">
               Use <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-white font-mono text-[10px]">&larr;</kbd> and{' '}
               <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-white font-mono text-[10px]">&rarr;</kbd> to navigate,{' '}
               <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-white font-mono text-[10px]">Esc</kbd> to close

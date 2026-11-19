@@ -76,7 +76,7 @@ function EventCardImage({
           onError={handleImageError}
         />
         {onClick && (
-          <div className="absolute top-3.5 right-3.5 bg-black/60 hover:bg-black/80 text-white p-1.5 rounded-lg opacity-0 group-hover/img:opacity-100 transition-opacity backdrop-blur-xs">
+          <div className="absolute top-3.5 right-3.5 bg-black/60 hover:bg-black/80 text-white p-1.5 rounded-lg opacity-0 sm:group-hover/img:opacity-100 transition-opacity backdrop-blur-xs pointer-events-none">
             <Maximize2 className="w-3.5 h-3.5" />
           </div>
         )}

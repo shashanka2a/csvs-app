@@ -92,8 +92,8 @@ export default function GallerySection() {
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
-              {/* Hover overlay with Event Name */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-end">
+              {/* Hover overlay with Event Name - desktop only so mobile photo is never blocked */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 sm:group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-end pointer-events-none">
                 <span className="text-white text-sm font-bold truncate">
                   {p1.title || 'Chattada Sri Vaishnava Sangham'}
                 </span>
@@ -120,7 +120,7 @@ export default function GallerySection() {
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 sm:group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end pointer-events-none">
                   <span className="text-white text-xs font-bold truncate">
                     {p2.title || 'Community Moment'}
                   </span>
@@ -145,7 +145,7 @@ export default function GallerySection() {
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 sm:group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end pointer-events-none">
                   <span className="text-white text-xs font-bold truncate">
                     {p3.title || 'Community Moment'}
                   </span>
