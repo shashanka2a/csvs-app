@@ -14,64 +14,7 @@ import {
 } from 'lucide-react';
 import type { SanghamEvent } from '@/app/api/events/route';
 
-const INITIAL_EVENTS: SanghamEvent[] = [
-  {
-    id: '1',
-    title: 'Diwali Mela 2026',
-    date: 'Nov 25, 2026',
-    time: '6:00 PM',
-    location: 'Hyderabad',
-    type: 'Cultural',
-    description: 'Grand Diwali celebration with lights, sweets, and cultural programs.',
-    image:
-      'https://images.unsplash.com/photo-1508261301902-127bcfb92787?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-    month: 'NOV',
-    day: '25',
-    year: '2026',
-  },
-  {
-    id: '2',
-    title: 'Annual Matrimony Meet',
-    date: 'Dec 5, 2026',
-    time: '10:00 AM',
-    location: 'Nizamabad',
-    type: 'Matrimony',
-    description: 'Annual gathering for eligible community members and families seeking alliances.',
-    image:
-      'https://images.unsplash.com/photo-1552589578-8cfbc443ceb6?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-    month: 'DEC',
-    day: '05',
-    year: '2026',
-  },
-  {
-    id: '3',
-    title: 'Community Meetup – Bodhan',
-    date: 'Dec 12, 2026',
-    time: '4:30 PM',
-    location: 'Bodhan',
-    type: 'Community',
-    description: 'Monthly community meetup for members in the Bodhan mandal area.',
-    image:
-      'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-    month: 'DEC',
-    day: '12',
-    year: '2026',
-  },
-  {
-    id: '4',
-    title: 'Vinayaka Chavithi Pooja',
-    date: 'Jan 8, 2027',
-    time: '9:00 AM',
-    location: 'Armoor',
-    type: 'Cultural',
-    description: 'Traditional Vinayaka Chavithi pooja with prasadam distribution.',
-    image:
-      'https://images.unsplash.com/photo-1600096194534-95cf5ece04cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-    month: 'JAN',
-    day: '08',
-    year: '2027',
-  },
-];
+const INITIAL_EVENTS: SanghamEvent[] = [];
 
 function getCategoryColor(type: string): string {
   const t = (type || '').toLowerCase();
@@ -109,11 +52,8 @@ function EventCardImage({ src, title }: { src?: string; title: string }) {
   );
 }
 
-const CATEGORY_TABS = ['All', 'Cultural', 'Community', 'Matrimony', 'Spiritual'] as const;
-
 export default function EventsPage() {
   const [events, setEvents] = useState<SanghamEvent[]>(INITIAL_EVENTS);
-  const [activeTab, setActiveTab] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -123,7 +63,7 @@ export default function EventsPage() {
       const res = await fetch('/api/events', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data.events) && data.events.length > 0) {
+        if (Array.isArray(data.events)) {
           setEvents(data.events);
         }
       }
@@ -140,17 +80,13 @@ export default function EventsPage() {
 
   const filtered = events.filter((ev) => {
     const q = searchQuery.toLowerCase().trim();
-    const matchesSearch =
-      !q ||
+    if (!q) return true;
+    return (
       ev.title.toLowerCase().includes(q) ||
       ev.description.toLowerCase().includes(q) ||
-      ev.location.toLowerCase().includes(q);
-
-    const matchesCategory =
-      activeTab === 'All' ||
-      ev.type.toLowerCase().includes(activeTab.toLowerCase());
-
-    return matchesSearch && matchesCategory;
+      ev.location.toLowerCase().includes(q) ||
+      ev.type.toLowerCase().includes(q)
+    );
   });
 
   return (
@@ -159,60 +95,42 @@ export default function EventsPage() {
       <section className="bg-brand-dark text-white py-16">
         <div className="container mx-auto px-4 lg:px-8">
           <span className="text-brand-gold text-xs font-bold tracking-widest uppercase mb-2 block">
-            Upcoming & Past Gatherings
+            Sangham Gatherings & Celebrations
           </span>
           <h1 className="font-serif text-4xl md:text-5xl font-bold mb-3">Community Events</h1>
           <p className="text-gray-300 text-base md:text-lg max-w-2xl leading-relaxed">
-            Stay updated with the latest events, celebrations, festivals, and gatherings of our Sangham.
+            Stay updated with the latest events, celebrations, and gatherings loaded live from our Sangham Sheet.
           </p>
         </div>
       </section>
 
-      {/* 2. Interactive Search & Category Filter bar */}
+      {/* 2. Search & Live Sync Bar */}
       <div className="bg-white border-b border-brand-border sticky top-16 z-40 shadow-xs py-3.5">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
             {/* Search Input */}
-            <div className="relative w-full sm:w-80">
+            <div className="relative w-full sm:w-96">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-muted pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search events, venue, or topics..."
+                placeholder="Search events by title, venue, or description..."
                 className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-brand-border rounded-lg text-brand-dark placeholder-brand-muted focus:outline-none focus:ring-2 focus:ring-brand-red focus:bg-white transition-all"
               />
             </div>
 
-            {/* Category Filter Pills & Sync button */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-              {CATEGORY_TABS.map((tab) => {
-                const isActive = activeTab === tab;
-                return (
-                  <button
-                    key={tab}
-                    type="button"
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                      isActive
-                        ? 'bg-brand-red text-white shadow-xs'
-                        : 'bg-gray-100 text-brand-dark hover:bg-gray-200'
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                );
-              })}
-
+            {/* Sync button & Connected badge */}
+            <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={fetchEvents}
                 disabled={loading}
                 title="Refresh from Google Sheet"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-brand-border rounded-lg text-xs font-semibold text-brand-dark hover:bg-slate-100 transition-colors shrink-0 disabled:opacity-50 ml-1"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-brand-border rounded-lg text-xs font-semibold text-brand-dark hover:bg-slate-100 transition-colors shrink-0 disabled:opacity-50"
               >
                 <RefreshCw className={`w-3.5 h-3.5 text-brand-red ${loading ? 'animate-spin' : ''}`} />
-                <span className="hidden md:inline">Sync Sheet</span>
+                <span>Sync Sheet</span>
               </button>
             </div>
           </div>
@@ -232,11 +150,15 @@ export default function EventsPage() {
         </div>
 
         {filtered.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl border border-brand-border p-8">
+          <div className="text-center py-16 bg-white rounded-2xl border border-brand-border p-8 max-w-lg mx-auto">
             <CalendarCheck className="w-12 h-12 text-brand-muted/40 mx-auto mb-3" />
-            <p className="text-brand-dark font-serif font-bold text-lg mb-1">No events found</p>
+            <p className="text-brand-dark font-serif font-bold text-lg mb-1">
+              {searchQuery ? 'No matching events found' : 'No events scheduled yet'}
+            </p>
             <p className="text-brand-muted text-sm">
-              Try adjusting your search query or selecting a different category.
+              {searchQuery
+                ? 'Try adjusting your search query.'
+                : 'Any event details added to your Google Sheet will appear here live.'}
             </p>
           </div>
         ) : (

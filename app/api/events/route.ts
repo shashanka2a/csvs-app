@@ -17,65 +17,6 @@ export interface SanghamEvent {
 const GOOGLE_SHEET_EVENTS_CSV_URL =
   'https://docs.google.com/spreadsheets/d/1mUNv-OQf39D81ijUPEcSDON-VY8rmWqLlpasUQ-tSIk/export?format=csv&gid=327105065';
 
-const FALLBACK_EVENTS: SanghamEvent[] = [
-  {
-    id: 1,
-    title: 'Diwali Mela 2026',
-    date: 'Nov 25, 2026',
-    time: '6:00 PM',
-    location: 'Hyderabad',
-    type: 'Cultural',
-    description: 'Grand Diwali celebration with lights, sweets, and cultural programs.',
-    image:
-      'https://images.unsplash.com/photo-1508261301902-127bcfb92787?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-    month: 'NOV',
-    day: '25',
-    year: '2026',
-  },
-  {
-    id: 2,
-    title: 'Annual Matrimony Meet',
-    date: 'Dec 5, 2026',
-    time: '10:00 AM',
-    location: 'Nizamabad',
-    type: 'Matrimony',
-    description: 'Annual gathering for eligible community members and families seeking alliances.',
-    image:
-      'https://images.unsplash.com/photo-1552589578-8cfbc443ceb6?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-    month: 'DEC',
-    day: '05',
-    year: '2026',
-  },
-  {
-    id: 3,
-    title: 'Community Meetup – Bodhan',
-    date: 'Dec 12, 2026',
-    time: '4:30 PM',
-    location: 'Bodhan',
-    type: 'Community',
-    description: 'Monthly community meetup for members in the Bodhan mandal area.',
-    image:
-      'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-    month: 'DEC',
-    day: '12',
-    year: '2026',
-  },
-  {
-    id: 4,
-    title: 'Vinayaka Chavithi Pooja',
-    date: 'Jan 8, 2027',
-    time: '9:00 AM',
-    location: 'Armoor',
-    type: 'Cultural',
-    description: 'Traditional Vinayaka Chavithi pooja with prasadam distribution.',
-    image:
-      'https://images.unsplash.com/photo-1600096194534-95cf5ece04cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-    month: 'JAN',
-    day: '08',
-    year: '2027',
-  },
-];
-
 // Convert Google Drive sharing links or raw URLs into direct web image links
 function formatPhotoUrl(rawUrl: string): string {
   if (!rawUrl) return '';
@@ -214,36 +155,36 @@ export async function GET() {
     });
 
     if (!res.ok) {
-      console.warn(`[Events API] Google Sheet response status: ${res.status}. Using fallback.`);
+      console.warn(`[Events API] Google Sheet response status: ${res.status}.`);
       return NextResponse.json({
-        events: FALLBACK_EVENTS,
-        source: 'fallback',
-        total: FALLBACK_EVENTS.length,
+        events: [],
+        source: 'error',
+        total: 0,
       });
     }
 
     const csvText = await res.text();
     if (!csvText || csvText.includes('<!DOCTYPE') || csvText.includes('<html')) {
       return NextResponse.json({
-        events: FALLBACK_EVENTS,
-        source: 'fallback',
-        total: FALLBACK_EVENTS.length,
+        events: [],
+        source: 'empty',
+        total: 0,
       });
     }
 
     const events = parseCsv(csvText);
 
     return NextResponse.json({
-      events: events.length > 0 ? events : FALLBACK_EVENTS,
-      source: events.length > 0 ? 'google-sheet' : 'fallback',
-      total: events.length > 0 ? events.length : FALLBACK_EVENTS.length,
+      events,
+      source: 'google-sheet',
+      total: events.length,
     });
   } catch (error) {
     console.warn('[Events API] Error fetching sheet:', error);
     return NextResponse.json({
-      events: FALLBACK_EVENTS,
-      source: 'fallback',
-      total: FALLBACK_EVENTS.length,
+      events: [],
+      source: 'error',
+      total: 0,
     });
   }
 }
