@@ -17,12 +17,39 @@ export interface GalleryGroup {
   total: number;
 }
 
+export interface VideoItem {
+  id: string;
+  url: string;
+  embedUrl: string;
+  thumbnailUrl: string;
+  platform: 'youtube' | 'drive' | 'vimeo' | 'direct';
+  eventName: string;
+  date: string;
+  rawDate: string;
+}
+
+export interface VideoGroup {
+  groupKey: string;
+  eventName: string;
+  date: string;
+  displayDate: string;
+  videos: VideoItem[];
+  total: number;
+}
+
 const GOOGLE_SHEET_GALLERY_CSV_URL =
   process.env.GOOGLE_SHEET_GALLERY_CSV_URL ||
   'https://docs.google.com/spreadsheets/d/1mO7L6B9JewS4CitYcK3wTD-HhMBww76oeCb-3iQJr1g/export?format=csv&gid=1532582308';
 
 const GOOGLE_SHEET_GALLERY_GVIZ_URL =
   'https://docs.google.com/spreadsheets/d/1mO7L6B9JewS4CitYcK3wTD-HhMBww76oeCb-3iQJr1g/gviz/tq?tqx=out:csv&gid=1532582308';
+
+const GOOGLE_SHEET_VIDEOS_CSV_URL =
+  process.env.GOOGLE_SHEET_VIDEOS_CSV_URL ||
+  'https://docs.google.com/spreadsheets/d/1dBt3frHaSwowBHPjk3YoN_41W8hqa3UWsiNwjO0nDzQ/export?format=csv';
+
+const GOOGLE_SHEET_VIDEOS_GVIZ_URL =
+  'https://docs.google.com/spreadsheets/d/1dBt3frHaSwowBHPjk3YoN_41W8hqa3UWsiNwjO0nDzQ/gviz/tq?tqx=out:csv';
 
 // Convert Google Drive sharing links or raw URLs into direct web image links
 function formatPhotoUrl(rawUrl: string): string {
@@ -51,7 +78,6 @@ function formatPhotoUrl(rawUrl: string): string {
 function extractPhotoUrls(cellText: string): string[] {
   if (!cellText) return [];
 
-  // Match all URLs cleanly using regex
   const regex = /https?:\/\/[^\s,;"<>]+/g;
   const matches = cellText.match(regex);
   const urls: string[] = [];
@@ -62,6 +88,89 @@ function extractPhotoUrls(cellText: string): string[] {
       const formatted = formatPhotoUrl(clean);
       if (formatted && !urls.includes(formatted)) {
         urls.push(formatted);
+      }
+    }
+  }
+
+  return urls;
+}
+
+// Parse and format video URLs (YouTube, Google Drive, Vimeo, direct)
+export function parseVideoUrl(rawUrl: string): {
+  url: string;
+  embedUrl: string;
+  thumbnailUrl: string;
+  platform: 'youtube' | 'drive' | 'vimeo' | 'direct';
+} | null {
+  if (!rawUrl) return null;
+  const clean = rawUrl.trim().replace(/^["'\s]+|["'\s,;]+$/g, '');
+  if (!clean || !clean.startsWith('http')) return null;
+
+  // 1. YouTube (standard watch, short youtu.be, shorts, embed)
+  const ytMatch = clean.match(
+    /(?:youtube\.com\/(?:watch\?.*v=|shorts\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  );
+  if (ytMatch && ytMatch[1]) {
+    const videoId = ytMatch[1];
+    return {
+      url: clean,
+      embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`,
+      thumbnailUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+      platform: 'youtube',
+    };
+  }
+
+  // 2. Google Drive video
+  const driveMatch =
+    clean.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
+    clean.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (
+    driveMatch &&
+    driveMatch[1] &&
+    (clean.includes('drive.google.com') || clean.includes('docs.google.com'))
+  ) {
+    const fileId = driveMatch[1];
+    return {
+      url: clean,
+      embedUrl: `https://drive.google.com/file/d/${fileId}/preview`,
+      thumbnailUrl: `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`,
+      platform: 'drive',
+    };
+  }
+
+  // 3. Vimeo
+  const vimeoMatch = clean.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch && vimeoMatch[1]) {
+    const vimeoId = vimeoMatch[1];
+    return {
+      url: clean,
+      embedUrl: `https://player.vimeo.com/video/${vimeoId}?autoplay=1`,
+      thumbnailUrl: '',
+      platform: 'vimeo',
+    };
+  }
+
+  // 4. Direct video or generic URL
+  return {
+    url: clean,
+    embedUrl: clean,
+    thumbnailUrl: '',
+    platform: 'direct',
+  };
+}
+
+// Split multiple video URLs from cell text
+function extractVideoUrls(cellText: string): string[] {
+  if (!cellText) return [];
+  const regex = /https?:\/\/[^\s,;"<>]+/g;
+  const matches = cellText.match(regex);
+  const urls: string[] = [];
+
+  if (matches && matches.length > 0) {
+    for (let m of matches) {
+      const clean = m.replace(/^["'\s]+|["'\s,;]+$/g, '').trim();
+      if (clean && !urls.includes(clean)) {
+        urls.push(clean);
       }
     }
   }
@@ -183,11 +292,12 @@ function findEventNameIndex(headers: string[]): number {
   if (idx !== -1) return idx;
 
   idx = headers.findIndex((h) =>
-    (h === 'event' || h === 'title' || h === 'occasion' || h.includes('occasion') || (h.includes('event') && !h.includes('date') && !h.includes('time') && !h.includes('photo') && !h.includes('image') && !h.includes('file') && !h.includes('upload'))) &&
+    (h === 'event' || h === 'title' || h === 'occasion' || h.includes('occasion') || (h.includes('event') && !h.includes('date') && !h.includes('time') && !h.includes('photo') && !h.includes('video') && !h.includes('image') && !h.includes('file') && !h.includes('upload'))) &&
     !h.includes('timestamp') &&
     !h.includes('date') &&
     !h.includes('time') &&
     !h.includes('photo') &&
+    !h.includes('video') &&
     !h.includes('image') &&
     !h.includes('pic') &&
     !h.includes('file') &&
@@ -202,6 +312,7 @@ function findEventNameIndex(headers: string[]): number {
     !h.includes('member') &&
     !h.includes('user') &&
     !h.includes('photo') &&
+    !h.includes('video') &&
     !h.includes('file')
   );
   return idx;
@@ -242,6 +353,30 @@ function findPhotoIndex(headers: string[]): number {
     h.includes('upload') ||
     h.includes('file')
   );
+}
+
+// 4. Strict Video column index finder (matches Column D 'Videos')
+function findVideoIndex(headers: string[]): number {
+  let idx = headers.findIndex((h) =>
+    h === 'videos' ||
+    h === 'video' ||
+    h === 'video link' ||
+    h === 'video url' ||
+    h === 'video links' ||
+    h === 'youtube link' ||
+    h === 'youtube' ||
+    h.includes('video')
+  );
+  if (idx !== -1) return idx;
+
+  idx = headers.findIndex((h) =>
+    h.includes('youtube') ||
+    h.includes('recording') ||
+    h.includes('clip') ||
+    h.includes('media') ||
+    h.includes('drive')
+  );
+  return idx;
 }
 
 function parseGalleryCsv(text: string): GalleryGroup[] {
@@ -334,11 +469,105 @@ function parseGalleryCsv(text: string): GalleryGroup[] {
   return groups;
 }
 
-export async function GET() {
+function parseVideosCsv(text: string): VideoGroup[] {
+  const rows = parseCSV(text);
+  if (rows.length <= 1) return [];
+
+  const headers = rows[0].map((h) => h.trim().toLowerCase());
+
+  const nameIdx = findEventNameIndex(headers);
+  const dateIdx = findDateIndex(headers);
+  const videoIdx = findVideoIndex(headers);
+
+  const groupMap = new Map<string, VideoGroup>();
+
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (r.length < 2) continue;
+
+    const eventName =
+      nameIdx >= 0 && nameIdx < r.length && r[nameIdx].trim()
+        ? r[nameIdx].trim()
+        : 'Community Gathering';
+
+    const rawDate =
+      dateIdx >= 0 && dateIdx < r.length && r[dateIdx].trim()
+        ? r[dateIdx].trim()
+        : '';
+
+    const parsedDate = parseDate(rawDate);
+    const displayDate = parsedDate ? formatDisplayDate(rawDate) : (rawDate || 'Recent Moments');
+    const normalizedDate = parsedDate ? parsedDate.toISOString().split('T')[0] : (rawDate || 'undated');
+
+    const rawVideos = videoIdx >= 0 && videoIdx < r.length ? r[videoIdx] : '';
+    let combinedVideos = rawVideos;
+
+    for (let c = 0; c < r.length; c++) {
+      if (c === nameIdx || c === dateIdx || c === videoIdx) continue;
+      const cell = r[c] || '';
+      if (
+        cell.includes('youtube.com') ||
+        cell.includes('youtu.be') ||
+        cell.includes('drive.google.com') ||
+        cell.includes('vimeo.com') ||
+        cell.includes('.mp4') ||
+        cell.includes('http://') ||
+        cell.includes('https://')
+      ) {
+        combinedVideos += ', ' + cell;
+      }
+    }
+
+    const rawUrls = extractVideoUrls(combinedVideos);
+    if (rawUrls.length === 0) continue;
+
+    const groupKey = `${normalizedDate}___${eventName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+
+    if (!groupMap.has(groupKey)) {
+      groupMap.set(groupKey, {
+        groupKey,
+        eventName,
+        date: normalizedDate,
+        displayDate,
+        videos: [],
+        total: 0,
+      });
+    }
+
+    const group = groupMap.get(groupKey)!;
+    rawUrls.forEach((rawUrl, vIdx) => {
+      const parsed = parseVideoUrl(rawUrl);
+      if (parsed) {
+        group.videos.push({
+          id: `v_${i}_${vIdx}`,
+          url: parsed.url,
+          embedUrl: parsed.embedUrl,
+          thumbnailUrl: parsed.thumbnailUrl,
+          platform: parsed.platform,
+          eventName,
+          date: displayDate,
+          rawDate: normalizedDate,
+        });
+      }
+    });
+    group.total = group.videos.length;
+  }
+
+  const groups = Array.from(groupMap.values()).filter((g) => g.videos.length > 0);
+
+  groups.sort((a, b) => {
+    const timeA = parseDate(a.date)?.getTime() || 0;
+    const timeB = parseDate(b.date)?.getTime() || 0;
+    return timeB - timeA;
+  });
+
+  return groups;
+}
+
+async function fetchSheetCsv(csvUrl: string, gvizUrl: string): Promise<string> {
+  let csvText = '';
   try {
-    // 1. Try primary Google Sheet CSV export
-    let csvText = '';
-    const res = await fetch(GOOGLE_SHEET_GALLERY_CSV_URL, {
+    const res = await fetch(csvUrl, {
       cache: 'no-store',
       redirect: 'follow',
       headers: {
@@ -352,50 +581,62 @@ export async function GET() {
         csvText = text;
       }
     }
+  } catch (e) {
+    console.warn('[Fetch CSV Error]:', e);
+  }
 
-    // 2. Fallback to Google Visualization API if primary export was HTML or failed
-    if (!csvText) {
-      try {
-        const gvizRes = await fetch(GOOGLE_SHEET_GALLERY_GVIZ_URL, {
-          cache: 'no-store',
-          redirect: 'follow',
-          headers: {
-            'User-Agent': 'CSVS-NextApp/1.0',
-          },
-        });
-        if (gvizRes.ok) {
-          const text = await gvizRes.text();
-          if (text && !text.includes('<!DOCTYPE') && !text.includes('<html')) {
-            csvText = text;
-          }
-        }
-      } catch (e) {
-        console.warn('[Gallery API] GViz fetch fallback error:', e);
-      }
-    }
-
-    // If no CSV text could be retrieved (e.g. if sheet sharing is not yet set to Anyone with the link)
-    if (!csvText) {
-      return NextResponse.json({
-        groups: [],
-        total: 0,
-        source: 'google-sheet',
+  if (!csvText) {
+    try {
+      const gvizRes = await fetch(gvizUrl, {
+        cache: 'no-store',
+        redirect: 'follow',
+        headers: {
+          'User-Agent': 'CSVS-NextApp/1.0',
+        },
       });
+      if (gvizRes.ok) {
+        const text = await gvizRes.text();
+        if (text && !text.includes('<!DOCTYPE') && !text.includes('<html')) {
+          csvText = text;
+        }
+      }
+    } catch (e) {
+      console.warn('[Fetch GViz Error]:', e);
     }
+  }
 
-    const groups = parseGalleryCsv(csvText);
+  return csvText;
+}
+
+export async function GET() {
+  try {
+    const [photosCsv, videosCsv] = await Promise.all([
+      fetchSheetCsv(GOOGLE_SHEET_GALLERY_CSV_URL, GOOGLE_SHEET_GALLERY_GVIZ_URL),
+      fetchSheetCsv(GOOGLE_SHEET_VIDEOS_CSV_URL, GOOGLE_SHEET_VIDEOS_GVIZ_URL),
+    ]);
+
+    const groups = photosCsv ? parseGalleryCsv(photosCsv) : [];
+    const videoGroups = videosCsv ? parseVideosCsv(videosCsv) : [];
+
     const totalPhotos = groups.reduce((acc, g) => acc + g.total, 0);
+    const totalVideos = videoGroups.reduce((acc, g) => acc + g.total, 0);
 
     return NextResponse.json({
       groups,
+      videoGroups,
       total: totalPhotos,
+      totalPhotos,
+      totalVideos,
       source: 'google-sheet',
     });
   } catch (error) {
     console.warn('[Gallery API] Error:', error);
     return NextResponse.json({
       groups: [],
+      videoGroups: [],
       total: 0,
+      totalPhotos: 0,
+      totalVideos: 0,
       source: 'google-sheet',
     });
   }
