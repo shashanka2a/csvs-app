@@ -173,9 +173,13 @@ export async function GET() {
     }
 
     const events = parseCsv(csvText);
+    const eventTypes = Array.from(
+      new Set(events.map((e) => e.type.trim()).filter((t) => Boolean(t) && t.toLowerCase() !== 'all'))
+    );
 
     return NextResponse.json({
       events,
+      eventTypes,
       source: 'google-sheet',
       total: events.length,
     });

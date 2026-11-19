@@ -54,6 +54,7 @@ function EventCardImage({ src, title }: { src?: string; title: string }) {
 
 export default function EventsPage() {
   const [events, setEvents] = useState<SanghamEvent[]>(INITIAL_EVENTS);
+  const [activeTab, setActiveTab] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -78,15 +79,31 @@ export default function EventsPage() {
     fetchEvents();
   }, []);
 
+  // Dynamically extract unique event types from the sheet events
+  const dynamicEventTypes = Array.from(
+    new Set(
+      events
+        .map((ev) => ev.type?.trim())
+        .filter((t): t is string => Boolean(t) && t.toLowerCase() !== 'all')
+    )
+  );
+
+  const categoryTabs = ['All', ...dynamicEventTypes];
+
   const filtered = events.filter((ev) => {
     const q = searchQuery.toLowerCase().trim();
-    if (!q) return true;
-    return (
+    const matchesSearch =
+      !q ||
       ev.title.toLowerCase().includes(q) ||
       ev.description.toLowerCase().includes(q) ||
       ev.location.toLowerCase().includes(q) ||
-      ev.type.toLowerCase().includes(q)
-    );
+      ev.type.toLowerCase().includes(q);
+
+    const matchesTab =
+      activeTab === 'All' ||
+      ev.type.toLowerCase() === activeTab.toLowerCase();
+
+    return matchesSearch && matchesTab;
   });
 
   return (
@@ -104,33 +121,52 @@ export default function EventsPage() {
         </div>
       </section>
 
-      {/* 2. Search & Live Sync Bar */}
+      {/* 2. Search & Dynamic Event Types Filter bar */}
       <div className="bg-white border-b border-brand-border sticky top-16 z-40 shadow-xs py-3.5">
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
             {/* Search Input */}
-            <div className="relative w-full sm:w-96">
+            <div className="relative w-full lg:w-80 shrink-0">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-muted pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search events by title, venue, or description..."
+                placeholder="Search events, venue, or topics..."
                 className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-brand-border rounded-lg text-brand-dark placeholder-brand-muted focus:outline-none focus:ring-2 focus:ring-brand-red focus:bg-white transition-all"
               />
             </div>
 
-            {/* Sync button & Connected badge */}
-            <div className="flex items-center gap-3">
+            {/* Dynamic Event Types Filter Tabs & Sync button */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0">
+              {dynamicEventTypes.length > 0 &&
+                categoryTabs.map((tab) => {
+                  const isActive = activeTab.toLowerCase() === tab.toLowerCase();
+                  return (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setActiveTab(tab)}
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+                        isActive
+                          ? 'bg-brand-red text-white shadow-xs'
+                          : 'bg-gray-100 text-brand-dark hover:bg-gray-200'
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  );
+                })}
+
               <button
                 type="button"
                 onClick={fetchEvents}
                 disabled={loading}
                 title="Refresh from Google Sheet"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-brand-border rounded-lg text-xs font-semibold text-brand-dark hover:bg-slate-100 transition-colors shrink-0 disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-brand-border rounded-lg text-xs font-semibold text-brand-dark hover:bg-slate-100 transition-colors shrink-0 disabled:opacity-50 ml-1"
               >
                 <RefreshCw className={`w-3.5 h-3.5 text-brand-red ${loading ? 'animate-spin' : ''}`} />
-                <span>Sync Sheet</span>
+                <span className="hidden sm:inline">Sync Sheet</span>
               </button>
             </div>
           </div>
