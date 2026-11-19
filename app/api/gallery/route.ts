@@ -136,7 +136,7 @@ function parseVideoUrl(rawUrl: string): {
     return {
       url: clean,
       embedUrl: `https://drive.google.com/file/d/${fileId}/preview`,
-      streamUrl: `https://drive.usercontent.google.com/download?id=${fileId}&export=download`,
+      streamUrl: `/api/video-stream?id=${fileId}`,
       thumbnailUrl: `https://lh3.googleusercontent.com/d/${fileId}`,
       platform: 'drive',
     };
