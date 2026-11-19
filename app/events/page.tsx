@@ -1,173 +1,326 @@
-import type { Metadata } from 'next';
+'use client';
+
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { CalendarCheck, MapPin, CalendarDays } from 'lucide-react';
-import EventsFilter from '@/components/EventsFilter';
+import {
+  CalendarCheck,
+  MapPin,
+  CalendarDays,
+  Clock,
+  RefreshCw,
+  CheckCircle2,
+  Search,
+} from 'lucide-react';
+import type { SanghamEvent } from '@/app/api/events/route';
 
-export const metadata: Metadata = {
-  title: 'Events',
-  description: 'Upcoming and past community events of Chattada Sri Vaishnava Sangham.',
-};
-
-interface EventItem {
-  id: number;
-  title: string;
-  date: string;
-  location: string;
-  tag: 'Cultural' | 'Matrimony' | 'Community';
-  description: string;
-  image?: string;
-}
-
-const events: EventItem[] = [
+const INITIAL_EVENTS: SanghamEvent[] = [
   {
-    id: 1,
+    id: '1',
     title: 'Diwali Mela 2026',
     date: 'Nov 25, 2026',
+    time: '6:00 PM',
     location: 'Hyderabad',
-    tag: 'Cultural',
+    type: 'Cultural',
     description: 'Grand Diwali celebration with lights, sweets, and cultural programs.',
     image:
       'https://images.unsplash.com/photo-1508261301902-127bcfb92787?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+    month: 'NOV',
+    day: '25',
+    year: '2026',
   },
   {
-    id: 2,
+    id: '2',
     title: 'Annual Matrimony Meet',
     date: 'Dec 5, 2026',
+    time: '10:00 AM',
     location: 'Nizamabad',
-    tag: 'Matrimony',
+    type: 'Matrimony',
     description: 'Annual gathering for eligible community members and families seeking alliances.',
     image:
       'https://images.unsplash.com/photo-1552589578-8cfbc443ceb6?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+    month: 'DEC',
+    day: '05',
+    year: '2026',
   },
   {
-    id: 3,
+    id: '3',
     title: 'Community Meetup – Bodhan',
     date: 'Dec 12, 2026',
+    time: '4:30 PM',
     location: 'Bodhan',
-    tag: 'Community',
+    type: 'Community',
     description: 'Monthly community meetup for members in the Bodhan mandal area.',
     image:
       'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+    month: 'DEC',
+    day: '12',
+    year: '2026',
   },
   {
-    id: 4,
+    id: '4',
     title: 'Vinayaka Chavithi Pooja',
     date: 'Jan 8, 2027',
+    time: '9:00 AM',
     location: 'Armoor',
-    tag: 'Cultural',
+    type: 'Cultural',
     description: 'Traditional Vinayaka Chavithi pooja with prasadam distribution.',
     image:
       'https://images.unsplash.com/photo-1600096194534-95cf5ece04cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 5,
-    title: 'Community Gathering – Srinivaspur',
-    date: 'Jan 15, 2027',
-    location: 'Nizamabad',
-    tag: 'Community',
-    description: 'Community apartment warming ceremony for new residents.',
-  },
-  {
-    id: 6,
-    title: 'Engagement Ceremony',
-    date: 'Feb 2, 2027',
-    location: 'Hyderabad',
-    tag: 'Matrimony',
-    description: 'Engagement ceremony hosted by CSVS members in Hyderabad.',
+    month: 'JAN',
+    day: '08',
+    year: '2027',
   },
 ];
 
-const tagStyleMap: Record<EventItem['tag'], string> = {
-  Cultural: 'bg-orange-100 text-orange-700',
-  Matrimony: 'bg-pink-100 text-pink-700',
-  Community: 'bg-blue-100 text-blue-700',
-};
+function getCategoryColor(type: string): string {
+  const t = (type || '').toLowerCase();
+  if (t.includes('cultur')) return 'bg-orange-100 text-orange-800 border-orange-200';
+  if (t.includes('matrimon')) return 'bg-pink-100 text-pink-800 border-pink-200';
+  if (t.includes('spirit')) return 'bg-amber-100 text-amber-800 border-amber-200';
+  if (t.includes('celeb')) return 'bg-rose-100 text-rose-800 border-rose-200';
+  return 'bg-blue-100 text-blue-800 border-blue-200';
+}
+
+function EventCardImage({ src, title }: { src?: string; title: string }) {
+  const [error, setError] = useState(false);
+
+  if (src && !error) {
+    return (
+      <div className="relative h-48 w-full overflow-hidden bg-brand-cream">
+        <Image
+          src={src}
+          alt={title}
+          fill
+          unoptimized
+          className="object-cover group-hover:scale-105 transition-transform duration-500"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          onError={() => setError(true)}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-48 w-full bg-gradient-to-br from-brand-cream to-amber-50/50 flex flex-col items-center justify-center border-b border-brand-border/60">
+      <CalendarCheck className="w-12 h-12 text-brand-red/40 mb-2" />
+      <span className="text-xs font-semibold text-brand-muted uppercase tracking-wider">Sangham Event</span>
+    </div>
+  );
+}
+
+const CATEGORY_TABS = ['All', 'Cultural', 'Community', 'Matrimony', 'Spiritual'] as const;
 
 export default function EventsPage() {
+  const [events, setEvents] = useState<SanghamEvent[]>(INITIAL_EVENTS);
+  const [activeTab, setActiveTab] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const fetchEvents = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/events', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.events) && data.events.length > 0) {
+          setEvents(data.events);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch events from Google Sheet:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const filtered = events.filter((ev) => {
+    const q = searchQuery.toLowerCase().trim();
+    const matchesSearch =
+      !q ||
+      ev.title.toLowerCase().includes(q) ||
+      ev.description.toLowerCase().includes(q) ||
+      ev.location.toLowerCase().includes(q);
+
+    const matchesCategory =
+      activeTab === 'All' ||
+      ev.type.toLowerCase().includes(activeTab.toLowerCase());
+
+    return matchesSearch && matchesCategory;
+  });
+
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-slate-50 min-h-screen">
       {/* 1. Page hero banner */}
       <section className="bg-brand-dark text-white py-16">
         <div className="container mx-auto px-4 lg:px-8">
+          <span className="text-brand-gold text-xs font-bold tracking-widest uppercase mb-2 block">
+            Upcoming & Past Gatherings
+          </span>
           <h1 className="font-serif text-4xl md:text-5xl font-bold mb-3">Community Events</h1>
-          <p className="text-gray-400">
-            Stay updated with the latest events, festivals, and gatherings of our Sangham.
+          <p className="text-gray-300 text-base md:text-lg max-w-2xl leading-relaxed">
+            Stay updated with the latest events, celebrations, festivals, and gatherings of our Sangham.
           </p>
         </div>
       </section>
 
-      {/* 2. Filter bar */}
-      <div className="bg-white border-b border-brand-border sticky top-16 z-40">
-        <div className="container mx-auto px-4 py-3">
-          <EventsFilter />
+      {/* 2. Interactive Search & Category Filter bar */}
+      <div className="bg-white border-b border-brand-border sticky top-16 z-40 shadow-xs py-3.5">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+            {/* Search Input */}
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-muted pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search events, venue, or topics..."
+                className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-brand-border rounded-lg text-brand-dark placeholder-brand-muted focus:outline-none focus:ring-2 focus:ring-brand-red focus:bg-white transition-all"
+              />
+            </div>
+
+            {/* Category Filter Pills & Sync button */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+              {CATEGORY_TABS.map((tab) => {
+                const isActive = activeTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+                      isActive
+                        ? 'bg-brand-red text-white shadow-xs'
+                        : 'bg-gray-100 text-brand-dark hover:bg-gray-200'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={fetchEvents}
+                disabled={loading}
+                title="Refresh from Google Sheet"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-brand-border rounded-lg text-xs font-semibold text-brand-dark hover:bg-slate-100 transition-colors shrink-0 disabled:opacity-50 ml-1"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 text-brand-red ${loading ? 'animate-spin' : ''}`} />
+                <span className="hidden md:inline">Sync Sheet</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* 3. Events grid */}
+      {/* 3. Events Grid */}
       <section className="container mx-auto px-4 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event) => (
-            <article
-              key={event.id}
-              className="bg-white rounded-xl shadow-card border border-brand-border/60 overflow-hidden hover:shadow-lg transition-shadow group"
-            >
-              {/* Media header */}
-              {event.image ? (
-                <div className="relative h-48 overflow-hidden">
-                  <Image
-                    src={event.image}
-                    alt={event.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
-                </div>
-              ) : (
-                <div className="h-48 bg-brand-cream flex items-center justify-center">
-                  <CalendarCheck className="w-16 h-16 text-brand-border" />
-                </div>
-              )}
-
-              {/* Card body */}
-              <div className="p-5">
-                <span
-                  className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full inline-block ${tagStyleMap[event.tag]}`}
-                >
-                  {event.tag}
-                </span>
-
-                <h3 className="font-serif font-bold text-brand-dark text-lg mt-2 mb-1">
-                  {event.title}
-                </h3>
-
-                <p className="text-brand-muted text-sm mb-3 line-clamp-2">
-                  {event.description}
-                </p>
-
-                {/* Footer */}
-                <div className="flex items-center gap-4 text-xs text-brand-muted">
-                  <span className="flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 shrink-0" />
-                    {event.location}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <CalendarDays className="w-3.5 h-3.5 shrink-0" />
-                    {event.date}
-                  </span>
-                </div>
-
-                {/* CTA */}
-                <Link
-                  href="#"
-                  className="text-brand-red text-sm font-semibold hover:underline mt-3 block"
-                >
-                  Learn More
-                </Link>
-              </div>
-            </article>
-          ))}
+        <div className="mb-6 flex items-center justify-between">
+          <p className="text-xs text-brand-muted font-medium">
+            Showing <span className="font-bold text-brand-dark">{filtered.length}</span> events
+          </p>
+          <span className="inline-flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full font-medium border border-emerald-200">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>Connected to Events Sheet</span>
+          </span>
         </div>
+
+        {filtered.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-2xl border border-brand-border p-8">
+            <CalendarCheck className="w-12 h-12 text-brand-muted/40 mx-auto mb-3" />
+            <p className="text-brand-dark font-serif font-bold text-lg mb-1">No events found</p>
+            <p className="text-brand-muted text-sm">
+              Try adjusting your search query or selecting a different category.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((event) => (
+              <article
+                key={event.id}
+                className="bg-white rounded-2xl border border-brand-border/80 shadow-xs hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col group hover:-translate-y-1"
+              >
+                {/* Media header */}
+                <div className="relative">
+                  <EventCardImage src={event.image} title={event.title} />
+
+                  {/* Category Pill */}
+                  <div className="absolute top-3.5 left-3.5">
+                    <span
+                      className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border shadow-xs ${getCategoryColor(
+                        event.type
+                      )}`}
+                    >
+                      {event.type}
+                    </span>
+                  </div>
+
+                  {/* Date Badge */}
+                  {(event.month || event.day) && (
+                    <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-sm rounded-xl px-2.5 py-1.5 shadow-md text-center min-w-[50px] border border-white/60">
+                      <span className="block text-[10px] font-bold text-brand-red uppercase tracking-wider leading-none">
+                        {event.month}
+                      </span>
+                      <span className="block text-lg font-serif font-bold text-brand-dark leading-tight">
+                        {event.day}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Card body */}
+                <div className="p-5 flex flex-col flex-grow justify-between">
+                  <div>
+                    {/* Meta info: Location and Time */}
+                    <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-brand-muted mb-2.5">
+                      {event.location && (
+                        <span className="inline-flex items-center gap-1 font-medium text-brand-dark">
+                          <MapPin className="w-3.5 h-3.5 text-brand-red shrink-0" />
+                          <span>{event.location}</span>
+                        </span>
+                      )}
+                      {event.time && (
+                        <span className="inline-flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-brand-muted shrink-0" />
+                          <span>{event.time}</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className="font-serif font-bold text-brand-dark text-lg mb-2 group-hover:text-brand-red transition-colors line-clamp-2">
+                      {event.title}
+                    </h3>
+
+                    {event.description && (
+                      <p className="text-brand-muted text-xs leading-relaxed line-clamp-3 mb-4">
+                        {event.description}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-brand-muted mt-auto">
+                    <span className="flex items-center gap-1">
+                      <CalendarDays className="w-3.5 h-3.5 text-brand-red" />
+                      <span>{event.date || 'TBD'}</span>
+                    </span>
+                    <Link
+                      href="/contact"
+                      className="text-brand-red font-semibold hover:underline"
+                    >
+                      Sangham Details →
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

@@ -16,9 +16,32 @@ export default function EventsSection() {
   const [events, setEvents] = useState<FeaturedEvent[]>(DEFAULT_CONTENT.events);
 
   useEffect(() => {
+    // 1. Fetch live events from Google Sheet
+    fetch('/api/events')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.events) && data.events.length > 0) {
+          const mapped: FeaturedEvent[] = data.events.map((ev: any, idx: number) => ({
+            id: Number(ev.id) || idx + 1,
+            title: ev.title,
+            month: ev.month || 'EVENT',
+            day: ev.day || '••',
+            year: ev.year || '2026',
+            time: ev.time || '',
+            location: ev.location || 'Nizamabad',
+            category: ev.type || 'Community',
+            description: ev.description || '',
+            image:
+              ev.image ||
+              'https://images.unsplash.com/photo-1508261301902-127bcfb92787?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+          }));
+          setEvents(mapped);
+        }
+      })
+      .catch(() => {});
+
     if (typeof window !== 'undefined') {
       const loadContent = () => setEvents(getStoredContent().events);
-      loadContent();
       window.addEventListener('csvs_content_updated', loadContent);
       return () => window.removeEventListener('csvs_content_updated', loadContent);
     }
@@ -54,6 +77,7 @@ export default function EventsSection() {
                   src={event.image}
                   alt={event.title}
                   fill
+                  unoptimized
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
