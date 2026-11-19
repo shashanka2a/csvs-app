@@ -110,6 +110,23 @@ export default function EventsPage() {
   const fetchEvents = async () => {
     setLoading(true);
     try {
+      // Check if custom edited events exist in localStorage
+      if (typeof window !== 'undefined') {
+        const customRaw = localStorage.getItem('csvs_custom_events');
+        if (customRaw) {
+          try {
+            const parsed = JSON.parse(customRaw);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setEvents(parsed);
+              setLoading(false);
+              return;
+            }
+          } catch {
+            // fallback to fetch
+          }
+        }
+      }
+
       const res = await fetch('/api/events', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
@@ -126,6 +143,8 @@ export default function EventsPage() {
 
   useEffect(() => {
     fetchEvents();
+    window.addEventListener('csvs_events_custom_updated', fetchEvents);
+    return () => window.removeEventListener('csvs_events_custom_updated', fetchEvents);
   }, []);
 
   // Keyboard navigation to close modals on Escape

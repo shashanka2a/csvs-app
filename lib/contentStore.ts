@@ -305,3 +305,71 @@ export function formatGoogleDriveImageUrl(rawUrl: string): string {
   return trimmed;
 }
 
+export const CUSTOM_EVENTS_KEY = 'csvs_custom_events';
+export const CUSTOM_MEMBERS_KEY = 'csvs_custom_members';
+
+export function getStoredCustomEvents(): any[] | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(CUSTOM_EVENTS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveStoredCustomEvents(events: any[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(CUSTOM_EVENTS_KEY, JSON.stringify(events));
+    window.dispatchEvent(new Event('csvs_events_custom_updated'));
+  } catch (err) {
+    console.error('Failed to save custom events', err);
+  }
+}
+
+export function resetStoredCustomEvents(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(CUSTOM_EVENTS_KEY);
+    window.dispatchEvent(new Event('csvs_events_custom_updated'));
+  } catch (err) {
+    console.error('Failed to reset custom events', err);
+  }
+}
+
+export function getStoredCustomMembers(): any[] | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(CUSTOM_MEMBERS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveStoredCustomMembers(members: any[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(CUSTOM_MEMBERS_KEY, JSON.stringify(members));
+    window.dispatchEvent(new Event('csvs_members_custom_updated'));
+  } catch (err) {
+    console.error('Failed to save custom members', err);
+  }
+}
+
+export function resetStoredCustomMembers(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(CUSTOM_MEMBERS_KEY);
+    window.dispatchEvent(new Event('csvs_members_custom_updated'));
+  } catch (err) {
+    console.error('Failed to reset custom members', err);
+  }
+}
+
+

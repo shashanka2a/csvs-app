@@ -108,6 +108,23 @@ export default function MembersPage() {
   const fetchMembers = async () => {
     setLoading(true);
     try {
+      // Check if custom edited members exist in localStorage
+      if (typeof window !== 'undefined') {
+        const customRaw = localStorage.getItem('csvs_custom_members');
+        if (customRaw) {
+          try {
+            const parsed = JSON.parse(customRaw);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setMembers(parsed);
+              setLoading(false);
+              return;
+            }
+          } catch {
+            // fallback
+          }
+        }
+      }
+
       const res = await fetch('/api/members', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
@@ -124,6 +141,8 @@ export default function MembersPage() {
 
   useEffect(() => {
     fetchMembers();
+    window.addEventListener('csvs_members_custom_updated', fetchMembers);
+    return () => window.removeEventListener('csvs_members_custom_updated', fetchMembers);
   }, []);
 
   // Filtered members list

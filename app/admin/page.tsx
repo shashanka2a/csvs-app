@@ -17,39 +17,28 @@ import {
   EyeOff,
   ExternalLink,
   ImageIcon,
-  FileText,
   Calendar,
   Phone,
   Mail,
   MapPin,
   Sparkles,
-  ShieldCheck,
   AlertCircle,
   RefreshCw,
-  Video,
-  Play,
   Film,
+  Play,
   Copy,
   Edit2,
   Table,
   CheckCircle2,
   X,
   Search,
-  SlidersHorizontal,
-  ChevronUp,
-  ChevronDown,
-  FolderOpen,
-  ArrowUpDown,
-  Share2,
-  Layers,
+  Users,
+  CalendarDays,
+  Clock,
+  Briefcase,
 } from 'lucide-react';
 import Logo from '@/components/Logo';
 import {
-  SiteContent,
-  DEFAULT_CONTENT,
-  getStoredContent,
-  saveStoredContent,
-  resetStoredContent,
   AdminGalleryItem,
   AdminVideoItem,
   getStoredCustomPhotos,
@@ -58,8 +47,16 @@ import {
   getStoredCustomVideos,
   saveStoredCustomVideos,
   resetStoredCustomVideos,
+  getStoredCustomEvents,
+  saveStoredCustomEvents,
+  resetStoredCustomEvents,
+  getStoredCustomMembers,
+  saveStoredCustomMembers,
+  resetStoredCustomMembers,
   formatGoogleDriveImageUrl,
 } from '@/lib/contentStore';
+import type { SanghamEvent } from '@/app/api/events/route';
+import type { CommunityMember } from '@/app/api/members/route';
 
 // Google Sheet URLs
 const GOOGLE_SHEETS = {
@@ -67,25 +64,25 @@ const GOOGLE_SHEETS = {
     name: 'Photo Gallery Sheet',
     url: 'https://docs.google.com/spreadsheets/d/1mO7L6B9JewS4CitYcK3wTD-HhMBww76oeCb-3iQJr1g/edit?gid=1532582308#gid=1532582308',
     gid: '1532582308',
-    description: 'Contains event names, dates, and Google Drive links for photos.',
+    description: 'Event photo albums and Google Drive image links.',
   },
   videos: {
     name: 'Video Gallery Sheet',
     url: 'https://docs.google.com/spreadsheets/d/1dBt3frHaSwowBHPjk3YoN_41W8hqa3UWsiNwjO0nDzQ/edit?usp=sharing',
     gid: '0',
-    description: 'Contains event names, dates, and video URLs (YouTube, Drive, Vimeo).',
+    description: 'YouTube, Google Drive, and Vimeo community video recordings.',
   },
   events: {
     name: 'Sangham Events Sheet',
     url: 'https://docs.google.com/spreadsheets/d/1mUNv-OQf39D81ijUPEcSDON-VY8rmWqLlpasUQ-tSIk/edit?gid=327105065#gid=327105065',
     gid: '327105065',
-    description: 'Upcoming sangham spiritual talks, meetings, and annual functions.',
+    description: 'Upcoming spiritual talks, community meetings, and annual functions.',
   },
   members: {
     name: 'Community Directory Sheet',
     url: 'https://docs.google.com/spreadsheets/d/14e3REBG8Jh4rVtAHGs5LTq3irPBVz2bSssxysEJA_GM/edit?gid=0#gid=0',
     gid: '0',
-    description: 'Sangham members directory with names, Gotram, occupation, and phone.',
+    description: 'Member directory with names, Gotram, occupation, and phone.',
   },
 };
 
@@ -168,34 +165,26 @@ export default function AdminPage() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loginError, setLoginError] = useState<string>('');
 
-  // Dashboard tab state
-  const [activeTab, setActiveTab] = useState<'photos' | 'videos' | 'sheets' | 'content' | 'preview'>('photos');
+  // Active tab: photos, videos, events, members, sheets
+  const [activeTab, setActiveTab] = useState<'photos' | 'videos' | 'events' | 'members' | 'sheets'>('photos');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Google Sheets Data state
-  const [loadingSheets, setLoadingSheets] = useState<boolean>(true);
+  // Sync state
   const [syncing, setSyncing] = useState<boolean>(false);
   const [lastSynced, setLastSynced] = useState<string>('Just now');
+
+  // --- Photos & Videos State ---
   const [rawSheetPhotos, setRawSheetPhotos] = useState<AdminGalleryItem[]>([]);
   const [rawSheetVideos, setRawSheetVideos] = useState<AdminVideoItem[]>([]);
   const [photos, setPhotos] = useState<AdminGalleryItem[]>([]);
   const [videos, setVideos] = useState<AdminVideoItem[]>([]);
-  const [content, setContent] = useState<SiteContent>(DEFAULT_CONTENT);
-
-  // Filtering & search
   const [photoSearch, setPhotoSearch] = useState<string>('');
   const [selectedAlbum, setSelectedAlbum] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
-
-  // Photo editing modal state
   const [editingPhoto, setEditingPhoto] = useState<AdminGalleryItem | null>(null);
   const [isAddPhotoOpen, setIsAddPhotoOpen] = useState<boolean>(false);
   const [newPhotoUrl, setNewPhotoUrl] = useState<string>('');
   const [newPhotoEvent, setNewPhotoEvent] = useState<string>('ప్రమాణ స్వీకారోత్సవం');
   const [newPhotoDate, setNewPhotoDate] = useState<string>('2026-10-16');
-  const [newPhotoPosition, setNewPhotoPosition] = useState<'top' | 'bottom'>('top');
-
-  // Video editing modal state
   const [editingVideo, setEditingVideo] = useState<AdminVideoItem | null>(null);
   const [isAddVideoOpen, setIsAddVideoOpen] = useState<boolean>(false);
   const [newVideoUrl, setNewVideoUrl] = useState<string>('');
@@ -203,8 +192,42 @@ export default function AdminPage() {
   const [newVideoDate, setNewVideoDate] = useState<string>('2026-10-16');
   const [previewVideo, setPreviewVideo] = useState<AdminVideoItem | null>(null);
 
-  // Google Sheet Export modal
-  const [exportModalType, setExportModalType] = useState<'photos' | 'videos' | null>(null);
+  // --- Events State ---
+  const [rawSheetEvents, setRawSheetEvents] = useState<SanghamEvent[]>([]);
+  const [events, setEvents] = useState<SanghamEvent[]>([]);
+  const [eventSearch, setEventSearch] = useState<string>('');
+  const [selectedEventType, setSelectedEventType] = useState<string>('All');
+  const [editingEvent, setEditingEvent] = useState<SanghamEvent | null>(null);
+  const [isAddEventOpen, setIsAddEventOpen] = useState<boolean>(false);
+  const [newEvent, setNewEvent] = useState<Partial<SanghamEvent>>({
+    title: '',
+    type: 'Community',
+    date: '2026-12-05',
+    time: '10:00 AM – 1:00 PM',
+    location: 'Nizamabad',
+    description: '',
+    image: '',
+  });
+
+  // --- Members State ---
+  const [rawSheetMembers, setRawSheetMembers] = useState<CommunityMember[]>([]);
+  const [members, setMembers] = useState<CommunityMember[]>([]);
+  const [memberSearch, setMemberSearch] = useState<string>('');
+  const [selectedDistrict, setSelectedDistrict] = useState<string>('All');
+  const [editingMember, setEditingMember] = useState<CommunityMember | null>(null);
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState<boolean>(false);
+  const [newMember, setNewMember] = useState<Partial<CommunityMember>>({
+    fullName: '',
+    surname: '',
+    name: '',
+    district: 'Nizamabad',
+    occupation: '',
+    membershipId: '',
+    photo: '',
+  });
+
+  // Export Modal
+  const [exportModalType, setExportModalType] = useState<'photos' | 'videos' | 'events' | 'members' | null>(null);
   const [copiedExport, setCopiedExport] = useState<boolean>(false);
 
   const showToast = (msg: string) => {
@@ -212,15 +235,19 @@ export default function AdminPage() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Fetch live gallery data from Google Sheets API
-  const fetchLiveSheetsData = useCallback(async (isManualSync = false) => {
+  // Fetch all Google Sheets data
+  const fetchAllSheetsData = useCallback(async (isManualSync = false) => {
     if (isManualSync) setSyncing(true);
     try {
-      const res = await fetch('/api/gallery', { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
+      const [galleryRes, eventsRes, membersRes] = await Promise.all([
+        fetch('/api/gallery', { cache: 'no-store' }),
+        fetch('/api/events', { cache: 'no-store' }),
+        fetch('/api/members', { cache: 'no-store' }),
+      ]);
 
-        // Flatten photos from groups
+      // 1. Process Photos & Videos
+      if (galleryRes.ok) {
+        const data = await galleryRes.json();
         const sheetPhotos: AdminGalleryItem[] = [];
         if (Array.isArray(data.groups)) {
           data.groups.forEach((g: any, gIdx: number) => {
@@ -239,7 +266,6 @@ export default function AdminPage() {
           });
         }
 
-        // Flatten videos from videoGroups
         const sheetVideos: AdminVideoItem[] = [];
         if (Array.isArray(data.videoGroups)) {
           data.videoGroups.forEach((vg: any, vgIdx: number) => {
@@ -265,49 +291,58 @@ export default function AdminPage() {
         setRawSheetPhotos(sheetPhotos);
         setRawSheetVideos(sheetVideos);
 
-        // Check if user has saved custom overrides in localStorage
         const storedPhotos = getStoredCustomPhotos();
-        if (storedPhotos && storedPhotos.length > 0) {
-          setPhotos(storedPhotos);
-        } else {
-          setPhotos(sheetPhotos);
-        }
+        setPhotos(storedPhotos && storedPhotos.length > 0 ? storedPhotos : sheetPhotos);
 
         const storedVideos = getStoredCustomVideos();
-        if (storedVideos && storedVideos.length > 0) {
-          setVideos(storedVideos);
-        } else {
-          setVideos(sheetVideos);
-        }
+        setVideos(storedVideos && storedVideos.length > 0 ? storedVideos : sheetVideos);
+      }
 
-        setLastSynced(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-        if (isManualSync) {
-          showToast(`Synced ${sheetPhotos.length} photos and ${sheetVideos.length} videos from Google Sheets!`);
-        }
+      // 2. Process Events
+      if (eventsRes.ok) {
+        const eventsData = await eventsRes.json();
+        const sheetEvents: SanghamEvent[] = Array.isArray(eventsData.events) ? eventsData.events : [];
+        setRawSheetEvents(sheetEvents);
+
+        const storedEvents = getStoredCustomEvents();
+        setEvents(storedEvents && storedEvents.length > 0 ? storedEvents : sheetEvents);
+      }
+
+      // 3. Process Members
+      if (membersRes.ok) {
+        const membersData = await membersRes.json();
+        const sheetMembers: CommunityMember[] = Array.isArray(membersData.members) ? membersData.members : [];
+        setRawSheetMembers(sheetMembers);
+
+        const storedMembers = getStoredCustomMembers();
+        setMembers(storedMembers && storedMembers.length > 0 ? storedMembers : sheetMembers);
+      }
+
+      setLastSynced(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      if (isManualSync) {
+        showToast('All Google Sheets data refreshed successfully!');
       }
     } catch (err) {
-      console.warn('Failed to fetch from Google Sheets API', err);
+      console.warn('Failed to fetch from Google Sheets', err);
       if (isManualSync) {
-        showToast('Error syncing from Google Sheets. Please check your internet connection.');
+        showToast('Error syncing from Google Sheets.');
       }
     } finally {
-      setLoadingSheets(false);
       if (isManualSync) setSyncing(false);
     }
   }, []);
 
-  // Initial load
+  // Check login state on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('csvs_admin_token') || sessionStorage.getItem('csvs_admin_token');
       if (token === 'csvs_authenticated') {
         setIsAuthenticated(true);
       }
-      setContent(getStoredContent());
-      fetchLiveSheetsData();
+      fetchAllSheetsData();
     }
     setAuthChecking(false);
-  }, [fetchLiveSheetsData]);
+  }, [fetchAllSheetsData]);
 
   // Login handler
   const handleLogin = (e: React.FormEvent) => {
@@ -324,11 +359,10 @@ export default function AdminPage() {
       setIsAuthenticated(true);
       showToast('Logged in successfully to CSVS Admin Portal!');
     } else {
-      setLoginError('Invalid username or password. (Demo: admin / admin123)');
+      setLoginError('Invalid credentials. (Demo: admin / admin123)');
     }
   };
 
-  // Logout handler
   const handleLogout = () => {
     localStorage.removeItem('csvs_admin_token');
     sessionStorage.removeItem('csvs_admin_token');
@@ -336,7 +370,7 @@ export default function AdminPage() {
     showToast('Logged out of Admin Portal.');
   };
 
-  // Distinct albums list for filtering
+  // --- Photo Filters & Handlers ---
   const albumOptions = useMemo(() => {
     const set = new Set<string>();
     photos.forEach((p) => {
@@ -345,7 +379,6 @@ export default function AdminPage() {
     return Array.from(set);
   }, [photos]);
 
-  // Filtered photos
   const filteredPhotos = useMemo(() => {
     return photos.filter((p) => {
       const matchesAlbum = selectedAlbum === 'all' || p.eventName === selectedAlbum;
@@ -359,12 +392,10 @@ export default function AdminPage() {
     });
   }, [photos, selectedAlbum, photoSearch]);
 
-  // --- Photo Rearrangement Handlers ---
   const movePhoto = (currentIndexInFiltered: number, direction: 'up' | 'down') => {
     const item = filteredPhotos[currentIndexInFiltered];
     if (!item) return;
 
-    // Find original index in overall photos list
     const originalIndex = photos.findIndex((p) => p.id === item.id);
     if (originalIndex === -1) return;
 
@@ -397,7 +428,7 @@ export default function AdminPage() {
 
     const reordered = updated.map((p, idx) => ({ ...p, order: idx + 1 }));
     setPhotos(reordered);
-    showToast(`Moved photo to ${position}. Click "Save & Publish" to apply live.`);
+    showToast(`Moved photo to ${position}. Click "Save & Publish" to apply.`);
   };
 
   const removePhoto = (id: string) => {
@@ -413,16 +444,11 @@ export default function AdminPage() {
 
     const formattedUrl = formatGoogleDriveImageUrl(editingPhoto.url);
     const updated = photos.map((p) =>
-      p.id === editingPhoto.id
-        ? {
-            ...editingPhoto,
-            url: formattedUrl,
-          }
-        : p
+      p.id === editingPhoto.id ? { ...editingPhoto, url: formattedUrl } : p
     );
     setPhotos(updated);
     setEditingPhoto(null);
-    showToast('Photo details updated! Remember to click "Save & Publish".');
+    showToast('Photo updated! Remember to click "Save & Publish".');
   };
 
   const handleAddPhotoSubmit = (e: React.FormEvent) => {
@@ -430,39 +456,31 @@ export default function AdminPage() {
     if (!newPhotoUrl.trim()) return;
 
     const formattedUrl = formatGoogleDriveImageUrl(newPhotoUrl.trim());
-    const newId = `custom-photo-${Date.now()}`;
     const newEntry: AdminGalleryItem = {
-      id: newId,
+      id: `custom-photo-${Date.now()}`,
       url: formattedUrl,
       eventName: newPhotoEvent.trim() || 'CSVS Moments',
       date: newPhotoDate.trim() || new Date().toISOString().split('T')[0],
-      order: newPhotoPosition === 'top' ? 1 : photos.length + 1,
+      order: 1,
     };
 
-    let updated: AdminGalleryItem[];
-    if (newPhotoPosition === 'top') {
-      updated = [newEntry, ...photos];
-    } else {
-      updated = [...photos, newEntry];
-    }
-
-    const reordered = updated.map((p, idx) => ({ ...p, order: idx + 1 }));
-    setPhotos(reordered);
+    const updated = [newEntry, ...photos].map((p, idx) => ({ ...p, order: idx + 1 }));
+    setPhotos(updated);
     setIsAddPhotoOpen(false);
     setNewPhotoUrl('');
-    showToast('Photo added! Click "Save & Publish" to apply to live website.');
+    showToast('Photo added! Click "Save & Publish" to apply.');
   };
 
   const handleSaveAllPhotos = () => {
     saveStoredCustomPhotos(photos);
-    showToast('Published! Photo order and edits are now LIVE across the website.');
+    showToast('Published! Photo rearrangements are LIVE on website.');
   };
 
   const handleResetPhotosToSheet = () => {
-    if (confirm('Revert all custom photo order and edits back to the raw Google Sheets data?')) {
+    if (confirm('Revert all photos back to the raw Google Sheets data?')) {
       resetStoredCustomPhotos();
       setPhotos(rawSheetPhotos);
-      showToast('Reverted to Google Sheets default data.');
+      showToast('Reverted photos to Google Sheets default.');
     }
   };
 
@@ -477,21 +495,7 @@ export default function AdminPage() {
 
     const reordered = updated.map((v, idx) => ({ ...v, order: idx + 1 }));
     setVideos(reordered);
-    showToast(`Moved video to position #${targetIndex + 1}. Click "Save & Publish".`);
-  };
-
-  const moveVideoToExtreme = (index: number, position: 'top' | 'bottom') => {
-    const updated = [...videos];
-    const [moved] = updated.splice(index, 1);
-    if (position === 'top') {
-      updated.unshift(moved);
-    } else {
-      updated.push(moved);
-    }
-
-    const reordered = updated.map((v, idx) => ({ ...v, order: idx + 1 }));
-    setVideos(reordered);
-    showToast(`Moved video to ${position}.`);
+    showToast(`Moved video to position #${targetIndex + 1}.`);
   };
 
   const removeVideo = (id: string) => {
@@ -528,9 +532,8 @@ export default function AdminPage() {
     if (!newVideoUrl.trim()) return;
 
     const parsed = parseVideoInput(newVideoUrl.trim());
-    const newId = `custom-video-${Date.now()}`;
     const newEntry: AdminVideoItem = {
-      id: newId,
+      id: `custom-video-${Date.now()}`,
       url: parsed.url || newVideoUrl.trim(),
       embedUrl: parsed.embedUrl,
       streamUrl: parsed.streamUrl,
@@ -545,91 +548,292 @@ export default function AdminPage() {
     setVideos(updated);
     setIsAddVideoOpen(false);
     setNewVideoUrl('');
-    showToast('Video added! Click "Save & Publish" to update website.');
+    showToast('Video added! Click "Save & Publish" to apply.');
   };
 
   const handleSaveAllVideos = () => {
     saveStoredCustomVideos(videos);
-    showToast('Published! Video rearrangements are now LIVE on the website.');
+    showToast('Published! Video rearrangements are LIVE on website.');
   };
 
   const handleResetVideosToSheet = () => {
     if (confirm('Revert all videos back to the raw Google Sheets data?')) {
       resetStoredCustomVideos();
       setVideos(rawSheetVideos);
-      showToast('Reverted videos to Google Sheets default data.');
+      showToast('Reverted videos to Google Sheets default.');
     }
   };
 
-  // --- Website Content Handlers ---
-  const handleContentChange = (section: keyof SiteContent, key: string, value: any) => {
-    setContent((prev) => ({
-      ...prev,
-      [section]: {
-        ...(prev[section] as any),
-        [key]: value,
-      },
-    }));
+  // --- Events Handlers ---
+  const eventTypes = useMemo(() => {
+    const set = new Set<string>();
+    events.forEach((ev) => {
+      if (ev.type) set.add(ev.type);
+    });
+    return Array.from(set);
+  }, [events]);
+
+  const filteredEvents = useMemo(() => {
+    return events.filter((ev) => {
+      const matchesType = selectedEventType === 'All' || ev.type === selectedEventType;
+      const q = eventSearch.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        ev.title.toLowerCase().includes(q) ||
+        ev.location.toLowerCase().includes(q) ||
+        ev.date.toLowerCase().includes(q) ||
+        ev.description.toLowerCase().includes(q);
+      return matchesType && matchesSearch;
+    });
+  }, [events, selectedEventType, eventSearch]);
+
+  const moveEvent = (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= events.length) return;
+
+    const updated = [...events];
+    const [moved] = updated.splice(index, 1);
+    updated.splice(targetIndex, 0, moved);
+
+    setEvents(updated);
+    showToast(`Moved event to position #${targetIndex + 1}.`);
   };
 
-  const handleSaveContent = () => {
-    saveStoredContent(content);
-    showToast('Website content saved! Hero and Contact details updated across the site.');
+  const removeEvent = (id: string | number) => {
+    if (!confirm('Are you sure you want to remove this event?')) return;
+    const updated = events.filter((ev) => ev.id !== id);
+    setEvents(updated);
+    showToast('Event removed.');
   };
 
-  const handleResetContent = () => {
-    if (confirm('Reset website hero and contact content to defaults?')) {
-      resetStoredContent();
-      setContent(DEFAULT_CONTENT);
-      showToast('Content reset to default values.');
+  const handleSaveEventDetails = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingEvent) return;
+
+    const formattedImage = editingEvent.image ? formatGoogleDriveImageUrl(editingEvent.image) : '';
+    const updated = events.map((ev) =>
+      ev.id === editingEvent.id
+        ? {
+            ...editingEvent,
+            image: formattedImage,
+          }
+        : ev
+    );
+    setEvents(updated);
+    setEditingEvent(null);
+    showToast('Event details updated! Remember to click "Save & Publish".');
+  };
+
+  const handleAddEventSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEvent.title?.trim()) return;
+
+    const formattedImage = newEvent.image ? formatGoogleDriveImageUrl(newEvent.image) : '';
+    const d = new Date(newEvent.date || '');
+    let month = 'EVENT';
+    let day = '••';
+    let year = '';
+    if (!isNaN(d.getTime())) {
+      month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+      day = String(d.getDate()).padStart(2, '0');
+      year = String(d.getFullYear());
+    }
+
+    const newEntry: SanghamEvent = {
+      id: `custom-event-${Date.now()}`,
+      title: newEvent.title.trim(),
+      type: newEvent.type || 'Community',
+      date: newEvent.date || '',
+      time: newEvent.time || '',
+      location: newEvent.location || 'Nizamabad',
+      description: newEvent.description || '',
+      image: formattedImage,
+      month,
+      day,
+      year,
+    };
+
+    const updated = [newEntry, ...events];
+    setEvents(updated);
+    setIsAddEventOpen(false);
+    setNewEvent({
+      title: '',
+      type: 'Community',
+      date: '2026-12-05',
+      time: '10:00 AM – 1:00 PM',
+      location: 'Nizamabad',
+      description: '',
+      image: '',
+    });
+    showToast('Event added! Click "Save & Publish" to update website.');
+  };
+
+  const handleSaveAllEvents = () => {
+    saveStoredCustomEvents(events);
+    showToast('Published! Events are now LIVE across the website.');
+  };
+
+  const handleResetEventsToSheet = () => {
+    if (confirm('Revert all events back to the raw Google Sheets data?')) {
+      resetStoredCustomEvents();
+      setEvents(rawSheetEvents);
+      showToast('Reverted events to Google Sheets default.');
+    }
+  };
+
+  // --- Members Handlers ---
+  const districtOptions = useMemo(() => {
+    const set = new Set<string>();
+    members.forEach((m) => {
+      if (m.district) set.add(m.district);
+    });
+    return Array.from(set);
+  }, [members]);
+
+  const filteredMembers = useMemo(() => {
+    return members.filter((m) => {
+      const matchesDistrict = selectedDistrict === 'All' || m.district === selectedDistrict;
+      const q = memberSearch.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        m.fullName.toLowerCase().includes(q) ||
+        m.surname.toLowerCase().includes(q) ||
+        m.name.toLowerCase().includes(q) ||
+        m.occupation.toLowerCase().includes(q) ||
+        (m.membershipId && m.membershipId.toLowerCase().includes(q));
+      return matchesDistrict && matchesSearch;
+    });
+  }, [members, selectedDistrict, memberSearch]);
+
+  const removeMember = (id: string) => {
+    if (!confirm('Are you sure you want to remove this member?')) return;
+    const updated = members.filter((m) => m.id !== id);
+    setMembers(updated);
+    showToast('Member removed.');
+  };
+
+  const handleSaveMemberDetails = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember) return;
+
+    const formattedPhoto = editingMember.photo ? formatGoogleDriveImageUrl(editingMember.photo) : '';
+    const updated = members.map((m) =>
+      m.id === editingMember.id
+        ? {
+            ...editingMember,
+            photo: formattedPhoto,
+            fullName: `${editingMember.surname || ''} ${editingMember.name || ''}`.trim() || editingMember.fullName,
+          }
+        : m
+    );
+    setMembers(updated);
+    setEditingMember(null);
+    showToast('Member details updated! Click "Save & Publish".');
+  };
+
+  const handleAddMemberSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMember.name?.trim()) return;
+
+    const formattedPhoto = newMember.photo ? formatGoogleDriveImageUrl(newMember.photo) : '';
+    const fullName = `${newMember.surname || ''} ${newMember.name || ''}`.trim() || newMember.fullName || 'Member';
+    const newEntry: CommunityMember = {
+      id: `custom-member-${Date.now()}`,
+      name: newMember.name.trim(),
+      surname: newMember.surname || '',
+      fullName,
+      district: newMember.district || 'Nizamabad',
+      occupation: newMember.occupation || '',
+      membershipId: newMember.membershipId || '',
+      photo: formattedPhoto,
+    };
+
+    const updated = [newEntry, ...members];
+    setMembers(updated);
+    setIsAddMemberOpen(false);
+    setNewMember({
+      fullName: '',
+      surname: '',
+      name: '',
+      district: 'Nizamabad',
+      occupation: '',
+      membershipId: '',
+      photo: '',
+    });
+    showToast('Member added! Click "Save & Publish" to update website.');
+  };
+
+  const handleSaveAllMembers = () => {
+    saveStoredCustomMembers(members);
+    showToast('Published! Member directory is now LIVE across the website.');
+  };
+
+  const handleResetMembersToSheet = () => {
+    if (confirm('Revert all members back to the raw Google Sheets data?')) {
+      resetStoredCustomMembers();
+      setMembers(rawSheetMembers);
+      showToast('Reverted members to Google Sheets default.');
     }
   };
 
   // --- Google Sheet Export Text Generator ---
-  const generateExportText = (type: 'photos' | 'videos') => {
+  const generateExportText = (type: 'photos' | 'videos' | 'events' | 'members') => {
     if (type === 'photos') {
-      // Group by event name and date
       const map = new Map<string, { eventName: string; date: string; urls: string[] }>();
       photos.forEach((p) => {
         const key = `${p.eventName}___${p.date}`;
-        if (!map.has(key)) {
-          map.set(key, { eventName: p.eventName, date: p.date, urls: [] });
-        }
+        if (!map.has(key)) map.set(key, { eventName: p.eventName, date: p.date, urls: [] });
         map.get(key)!.urls.push(p.url);
       });
-
-      const lines: string[] = ['Timestamp\tEvent Name\tDate\tPhotos'];
+      const lines = ['Timestamp\tEvent Name\tDate\tPhotos'];
       map.forEach((item) => {
-        const timestamp = new Date().toLocaleString('en-US');
-        const photoList = item.urls.join(', ');
-        lines.push(`${timestamp}\t${item.eventName}\t${item.date}\t${photoList}`);
-      });
-      return lines.join('\n');
-    } else {
-      const map = new Map<string, { eventName: string; date: string; urls: string[] }>();
-      videos.forEach((v) => {
-        const key = `${v.eventName}___${v.date}`;
-        if (!map.has(key)) {
-          map.set(key, { eventName: v.eventName, date: v.date, urls: [] });
-        }
-        map.get(key)!.urls.push(v.url);
-      });
-
-      const lines: string[] = ['Timestamp\tEvent Name\tDate\tVideos'];
-      map.forEach((item) => {
-        const timestamp = new Date().toLocaleString('en-US');
-        const videoList = item.urls.join(', ');
-        lines.push(`${timestamp}\t${item.eventName}\t${item.date}\t${videoList}`);
+        lines.push(`${new Date().toLocaleString()}\t${item.eventName}\t${item.date}\t${item.urls.join(', ')}`);
       });
       return lines.join('\n');
     }
+
+    if (type === 'videos') {
+      const map = new Map<string, { eventName: string; date: string; urls: string[] }>();
+      videos.forEach((v) => {
+        const key = `${v.eventName}___${v.date}`;
+        if (!map.has(key)) map.set(key, { eventName: v.eventName, date: v.date, urls: [] });
+        map.get(key)!.urls.push(v.url);
+      });
+      const lines = ['Timestamp\tEvent Name\tDate\tVideos'];
+      map.forEach((item) => {
+        lines.push(`${new Date().toLocaleString()}\t${item.eventName}\t${item.date}\t${item.urls.join(', ')}`);
+      });
+      return lines.join('\n');
+    }
+
+    if (type === 'events') {
+      const lines = ['Timestamp\tEvent Name\tDescription\tType\tDate\tTime\tLocation\tPhoto'];
+      events.forEach((ev) => {
+        lines.push(
+          `${new Date().toLocaleString()}\t${ev.title}\t${ev.description}\t${ev.type}\t${ev.date}\t${ev.time}\t${ev.location}\t${ev.image || ''}`
+        );
+      });
+      return lines.join('\n');
+    }
+
+    if (type === 'members') {
+      const lines = ['Membership ID\tSurname\tName\tFull Name\tDistrict\tOccupation\tPhoto'];
+      members.forEach((m) => {
+        lines.push(
+          `${m.membershipId || ''}\t${m.surname}\t${m.name}\t${m.fullName}\t${m.district}\t${m.occupation}\t${m.photo || ''}`
+        );
+      });
+      return lines.join('\n');
+    }
+
+    return '';
   };
 
   const handleCopyExport = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedExport(true);
     setTimeout(() => setCopiedExport(false), 2500);
-    showToast('Copied rows to clipboard! You can now paste directly into your Google Sheet.');
+    showToast('Copied rows to clipboard! You can paste directly into Google Sheets.');
   };
 
   if (authChecking) {
@@ -641,7 +845,7 @@ export default function AdminPage() {
   }
 
   // ==========================================
-  // 1. LOGIN SCREEN (Unauthenticated)
+  // 1. LOGIN SCREEN
   // ==========================================
   if (!isAuthenticated) {
     return (
@@ -732,7 +936,7 @@ export default function AdminPage() {
   }
 
   // ==========================================
-  // 2. ADMIN DASHBOARD (Authenticated)
+  // 2. ADMIN DASHBOARD
   // ==========================================
   return (
     <div className="min-h-screen bg-slate-100 text-brand-dark pb-16">
@@ -744,12 +948,10 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* SINGLE DEDICATED ADMIN HEADER */}
+      {/* DEDICATED ADMIN HEADER */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Top Bar: Brand, Status, Actions */}
           <div className="h-16 flex items-center justify-between gap-4">
-            {/* Left: Brand & Status */}
             <div className="flex items-center gap-3">
               <Link href="/admin" className="flex items-center gap-2.5">
                 <Logo className="w-9 h-9 rounded-lg shadow-xs shrink-0" />
@@ -770,10 +972,9 @@ export default function AdminPage() {
               </Link>
             </div>
 
-            {/* Right: Sync, View Website, Logout */}
             <div className="flex items-center gap-2 sm:gap-3">
               <button
-                onClick={() => fetchLiveSheetsData(true)}
+                onClick={() => fetchAllSheetsData(true)}
                 disabled={syncing}
                 title="Fetch fresh data from Google Sheets"
                 className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors disabled:opacity-50 shadow-2xs"
@@ -788,7 +989,7 @@ export default function AdminPage() {
                 className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors shadow-2xs"
               >
                 <Eye className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">View Live Site</span>
+                <span className="hidden sm:inline">View Site</span>
                 <ExternalLink className="w-3 h-3 text-slate-400" />
               </Link>
 
@@ -835,6 +1036,36 @@ export default function AdminPage() {
             </button>
 
             <button
+              onClick={() => setActiveTab('events')}
+              className={`flex items-center gap-2 py-3 px-2 text-xs sm:text-sm font-semibold border-b-2 transition-all shrink-0 ${
+                activeTab === 'events'
+                  ? 'border-brand-red text-brand-red'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <CalendarDays className="w-4 h-4" />
+              <span>Events Editor</span>
+              <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-amber-50 text-amber-800 font-bold">
+                {events.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('members')}
+              className={`flex items-center gap-2 py-3 px-2 text-xs sm:text-sm font-semibold border-b-2 transition-all shrink-0 ${
+                activeTab === 'members'
+                  ? 'border-brand-red text-brand-red'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span>Members Editor</span>
+              <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-blue-50 text-blue-800 font-bold">
+                {members.length}
+              </span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('sheets')}
               className={`flex items-center gap-2 py-3 px-2 text-xs sm:text-sm font-semibold border-b-2 transition-all shrink-0 ${
                 activeTab === 'sheets'
@@ -848,42 +1079,17 @@ export default function AdminPage() {
                 4 Sheets
               </span>
             </button>
-
-            <button
-              onClick={() => setActiveTab('content')}
-              className={`flex items-center gap-2 py-3 px-2 text-xs sm:text-sm font-semibold border-b-2 transition-all shrink-0 ${
-                activeTab === 'content'
-                  ? 'border-brand-red text-brand-red'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <FileText className="w-4 h-4" />
-              <span>Website Content</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('preview')}
-              className={`flex items-center gap-2 py-3 px-2 text-xs sm:text-sm font-semibold border-b-2 transition-all shrink-0 ${
-                activeTab === 'preview'
-                  ? 'border-brand-red text-brand-red'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <Eye className="w-4 h-4" />
-              <span>Live Preview</span>
-            </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content Area */}
+      {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         {/* ========================================================= */}
-        {/* TAB 1: PHOTOS MANAGER (Google Sheets Backend)              */}
+        {/* TAB 1: PHOTOS MANAGER                                     */}
         {/* ========================================================= */}
         {activeTab === 'photos' && (
           <div className="space-y-6 animate-fade-in">
-            {/* Top Toolbar Card */}
             <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
@@ -895,15 +1101,13 @@ export default function AdminPage() {
                   </span>
                 </div>
                 <p className="text-xs sm:text-sm text-brand-muted mt-1">
-                  Rearrange photo order, edit titles and dates, or add new photos. Powered by Google Sheets.
+                  Rearrange photo order, edit titles and dates, or add new photos from Google Drive.
                 </p>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <button
                   onClick={handleResetPhotosToSheet}
-                  title="Discard custom rearrangements and re-sync fresh from Google Sheet"
                   className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
@@ -936,10 +1140,9 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Filter and Search Bar */}
+            {/* Filter Bar */}
             <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                {/* Search */}
                 <div className="relative flex-grow sm:w-64">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
@@ -951,13 +1154,12 @@ export default function AdminPage() {
                   />
                 </div>
 
-                {/* Album Filter */}
                 <select
                   value={selectedAlbum}
                   onChange={(e) => setSelectedAlbum(e.target.value)}
                   className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-brand-dark outline-none focus:ring-1 focus:ring-brand-red"
                 >
-                  <option value="all">All Event Albums ({photos.length})</option>
+                  <option value="all">All Albums ({photos.length})</option>
                   {albumOptions.map((alb) => (
                     <option key={alb} value={alb}>
                       {alb}
@@ -966,182 +1168,92 @@ export default function AdminPage() {
                 </select>
               </div>
 
-              {/* View Mode Toggle */}
-              <div className="flex items-center gap-2 text-xs text-brand-muted self-end sm:self-center">
-                <span>Showing {filteredPhotos.length} of {photos.length} photos</span>
-                <div className="flex border border-slate-200 rounded-lg overflow-hidden">
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`px-2.5 py-1 text-xs font-semibold ${
-                      viewMode === 'list' ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    List
-                  </button>
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`px-2.5 py-1 text-xs font-semibold ${
-                      viewMode === 'grid' ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    Grid
-                  </button>
-                </div>
-              </div>
+              <span className="text-xs text-brand-muted">
+                Showing {filteredPhotos.length} of {photos.length} photos
+              </span>
             </div>
 
-            {/* Photos List View (Ideal for Rearranging) */}
-            {viewMode === 'list' && (
-              <div className="space-y-2.5">
-                {filteredPhotos.map((photo, index) => (
-                  <div
-                    key={photo.id}
-                    className="bg-white rounded-xl p-3.5 sm:p-4 border border-slate-200 shadow-2xs hover:shadow-md transition-shadow flex flex-col md:flex-row md:items-center justify-between gap-4"
-                  >
-                    {/* Left: Position badge & Thumbnail */}
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span className="w-8 h-8 rounded-lg bg-slate-900 text-white font-mono font-bold text-xs flex items-center justify-center shrink-0">
-                        #{index + 1}
-                      </span>
-                      <div className="relative w-20 h-14 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0 group cursor-pointer"
-                           onClick={() => setEditingPhoto(photo)}>
-                        <Image
-                          src={photo.url}
-                          alt={photo.eventName}
-                          fill
-                          unoptimized
-                          className="object-cover group-hover:scale-105 transition-transform"
-                          sizes="80px"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Middle: Event details */}
-                    <div className="flex-grow min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-brand-dark truncate">{photo.eventName}</p>
-                        <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full shrink-0">
-                          {photo.date}
-                        </span>
-                      </div>
-                      <p className="text-xs text-brand-muted truncate mt-0.5 font-mono">
-                        {photo.url}
-                      </p>
-                    </div>
-
-                    {/* Right: Reorder & Edit Buttons */}
-                    <div className="flex items-center gap-1.5 self-end md:self-center shrink-0">
-                      <button
-                        title="Move Up"
-                        disabled={index === 0}
-                        onClick={() => movePhoto(index, 'up')}
-                        className="p-1.5 sm:p-2 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                      >
-                        <ArrowUp className="w-4 h-4" />
-                      </button>
-                      <button
-                        title="Move Down"
-                        disabled={index === filteredPhotos.length - 1}
-                        onClick={() => movePhoto(index, 'down')}
-                        className="p-1.5 sm:p-2 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                      >
-                        <ArrowDown className="w-4 h-4" />
-                      </button>
-                      <button
-                        title="Move to Top"
-                        disabled={index === 0}
-                        onClick={() => movePhotoToExtreme(index, 'top')}
-                        className="px-2 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-xs font-semibold text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                      >
-                        Top
-                      </button>
-                      <button
-                        title="Edit Details"
-                        onClick={() => setEditingPhoto(photo)}
-                        className="p-1.5 sm:p-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors ml-1"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        title="Remove Photo"
-                        onClick={() => removePhoto(photo.id)}
-                        className="p-1.5 sm:p-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Photos Grid View */}
-            {viewMode === 'grid' && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {filteredPhotos.map((photo, index) => (
-                  <div
-                    key={photo.id}
-                    className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-shadow group flex flex-col"
-                  >
-                    <div className="relative aspect-4/3 bg-slate-100">
+            {/* Photos List */}
+            <div className="space-y-2.5">
+              {filteredPhotos.map((photo, index) => (
+                <div
+                  key={photo.id}
+                  className="bg-white rounded-xl p-3.5 sm:p-4 border border-slate-200 shadow-2xs hover:shadow-md transition-shadow flex flex-col md:flex-row md:items-center justify-between gap-4"
+                >
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="w-8 h-8 rounded-lg bg-slate-900 text-white font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                      #{index + 1}
+                    </span>
+                    <div
+                      className="relative w-20 h-14 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0 cursor-pointer"
+                      onClick={() => setEditingPhoto(photo)}
+                    >
                       <Image
                         src={photo.url}
                         alt={photo.eventName}
                         fill
                         unoptimized
                         className="object-cover"
-                        sizes="(max-width: 768px) 50vw, 20vw"
+                        sizes="80px"
                       />
-                      <span className="absolute top-2 left-2 bg-slate-900/80 text-white font-mono text-[10px] font-bold px-1.5 py-0.5 rounded">
-                        #{index + 1}
-                      </span>
-                    </div>
-                    <div className="p-3 flex-grow flex flex-col justify-between">
-                      <div>
-                        <p className="text-xs font-bold text-brand-dark truncate">{photo.eventName}</p>
-                        <p className="text-[11px] text-brand-muted">{photo.date}</p>
-                      </div>
-                      <div className="flex items-center justify-between gap-1 mt-3 pt-2 border-t border-slate-100">
-                        <div className="flex items-center gap-1">
-                          <button
-                            title="Move Up"
-                            disabled={index === 0}
-                            onClick={() => movePhoto(index, 'up')}
-                            className="p-1 rounded hover:bg-slate-100 disabled:opacity-20"
-                          >
-                            <ArrowUp className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            title="Move Down"
-                            disabled={index === filteredPhotos.length - 1}
-                            onClick={() => movePhoto(index, 'down')}
-                            className="p-1 rounded hover:bg-slate-100 disabled:opacity-20"
-                          >
-                            <ArrowDown className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <button
-                            title="Edit"
-                            onClick={() => setEditingPhoto(photo)}
-                            className="p-1 rounded hover:bg-slate-100 text-slate-700"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            title="Delete"
-                            onClick={() => removePhoto(photo.id)}
-                            className="p-1 rounded hover:bg-red-50 text-red-600"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+
+                  <div className="flex-grow min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-bold text-brand-dark truncate">{photo.eventName}</p>
+                      <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full shrink-0">
+                        {photo.date}
+                      </span>
+                    </div>
+                    <p className="text-xs text-brand-muted truncate mt-0.5 font-mono">
+                      {photo.url}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 self-end md:self-center shrink-0">
+                    <button
+                      title="Move Up"
+                      disabled={index === 0}
+                      onClick={() => movePhoto(index, 'up')}
+                      className="p-1.5 sm:p-2 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ArrowUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      title="Move Down"
+                      disabled={index === filteredPhotos.length - 1}
+                      onClick={() => movePhoto(index, 'down')}
+                      className="p-1.5 sm:p-2 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ArrowDown className="w-4 h-4" />
+                    </button>
+                    <button
+                      title="Move to Top"
+                      disabled={index === 0}
+                      onClick={() => movePhotoToExtreme(index, 'top')}
+                      className="px-2 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-xs font-semibold text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Top
+                    </button>
+                    <button
+                      title="Edit Details"
+                      onClick={() => setEditingPhoto(photo)}
+                      className="p-1.5 sm:p-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors ml-1"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      title="Remove Photo"
+                      onClick={() => removePhoto(photo.id)}
+                      className="p-1.5 sm:p-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -1150,7 +1262,6 @@ export default function AdminPage() {
         {/* ========================================================= */}
         {activeTab === 'videos' && (
           <div className="space-y-6 animate-fade-in">
-            {/* Top Toolbar Card */}
             <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
@@ -1208,7 +1319,6 @@ export default function AdminPage() {
                   key={video.id}
                   className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs hover:shadow-md transition-shadow flex flex-col md:flex-row md:items-center justify-between gap-4"
                 >
-                  {/* Left */}
                   <div className="flex items-center gap-3 shrink-0">
                     <span className="w-8 h-8 rounded-lg bg-slate-900 text-white font-mono font-bold text-xs flex items-center justify-center shrink-0">
                       #{index + 1}
@@ -1234,7 +1344,6 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  {/* Middle */}
                   <div className="flex-grow min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-bold text-brand-dark truncate">{video.eventName}</p>
@@ -1250,7 +1359,6 @@ export default function AdminPage() {
                     </p>
                   </div>
 
-                  {/* Right Actions */}
                   <div className="flex items-center gap-1.5 self-end md:self-center shrink-0">
                     <button
                       title="Move Up"
@@ -1297,11 +1405,345 @@ export default function AdminPage() {
         )}
 
         {/* ========================================================= */}
-        {/* TAB 3: GOOGLE SHEETS HUB                                  */}
+        {/* TAB 3: EVENTS EDITOR                                      */}
+        {/* ========================================================= */}
+        {activeTab === 'events' && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-dark">
+                    Sangham Events Editor
+                  </h2>
+                  <span className="text-xs bg-amber-50 text-amber-800 font-semibold px-2 py-0.5 rounded-md">
+                    {events.length} events
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-brand-muted mt-1">
+                  Manage upcoming community functions, spiritual meetings, and celebrations.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <button
+                  onClick={handleResetEventsToSheet}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reset to Sheet</span>
+                </button>
+
+                <button
+                  onClick={() => setExportModalType('events')}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>Export to Sheet</span>
+                </button>
+
+                <button
+                  onClick={() => setIsAddEventOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 rounded-lg transition-colors shadow-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Event</span>
+                </button>
+
+                <button
+                  onClick={handleSaveAllEvents}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-brand-red hover:bg-brand-redhover rounded-lg transition-colors shadow-sm"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Save &amp; Publish Live</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Filter Bar */}
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                <div className="relative flex-grow sm:w-64">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={eventSearch}
+                    onChange={(e) => setEventSearch(e.target.value)}
+                    placeholder="Search title, location, description..."
+                    className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+
+                <select
+                  value={selectedEventType}
+                  onChange={(e) => setSelectedEventType(e.target.value)}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-brand-dark outline-none focus:ring-1 focus:ring-brand-red"
+                >
+                  <option value="All">All Categories ({events.length})</option>
+                  {eventTypes.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <span className="text-xs text-brand-muted">
+                Showing {filteredEvents.length} of {events.length} events
+              </span>
+            </div>
+
+            {/* Event Cards */}
+            <div className="space-y-3">
+              {filteredEvents.map((ev, index) => (
+                <div
+                  key={ev.id}
+                  className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200 shadow-2xs hover:shadow-md transition-shadow flex flex-col md:flex-row md:items-center justify-between gap-4"
+                >
+                  <div className="flex items-start sm:items-center gap-4">
+                    {/* Date Badge */}
+                    <div className="w-16 h-16 rounded-xl bg-red-50 border border-brand-red/20 flex flex-col items-center justify-center shrink-0 text-center">
+                      <span className="text-[10px] font-bold text-brand-red uppercase">{ev.month || 'EVENT'}</span>
+                      <span className="text-lg font-serif font-bold text-brand-dark leading-none">{ev.day || '••'}</span>
+                      <span className="text-[9px] text-brand-muted">{ev.year}</span>
+                    </div>
+
+                    {/* Image thumbnail if present */}
+                    {ev.image && (
+                      <div className="relative w-20 h-16 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0 hidden sm:block">
+                        <Image
+                          src={ev.image}
+                          alt={ev.title}
+                          fill
+                          unoptimized
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+
+                    {/* Details */}
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-sm sm:text-base font-bold text-brand-dark">{ev.title}</h3>
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
+                          {ev.type}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-brand-muted mt-1">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{ev.time}</span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{ev.location}</span>
+                        </span>
+                      </div>
+
+                      {ev.description && (
+                        <p className="text-xs text-slate-600 mt-1 line-clamp-1 max-w-2xl">
+                          {ev.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1.5 self-end md:self-center shrink-0">
+                    <button
+                      title="Move Up"
+                      disabled={index === 0}
+                      onClick={() => moveEvent(index, 'up')}
+                      className="p-2 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ArrowUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      title="Move Down"
+                      disabled={index === events.length - 1}
+                      onClick={() => moveEvent(index, 'down')}
+                      className="p-2 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ArrowDown className="w-4 h-4" />
+                    </button>
+                    <button
+                      title="Edit Details"
+                      onClick={() => setEditingEvent(ev)}
+                      className="p-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors ml-1"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      title="Remove Event"
+                      onClick={() => removeEvent(ev.id)}
+                      className="p-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 4: MEMBERS EDITOR                                     */}
+        {/* ========================================================= */}
+        {activeTab === 'members' && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-dark">
+                    Community Members Directory Editor
+                  </h2>
+                  <span className="text-xs bg-blue-50 text-blue-800 font-semibold px-2 py-0.5 rounded-md">
+                    {members.length} members
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-brand-muted mt-1">
+                  Manage member profiles, occupations, districts, and membership IDs.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <button
+                  onClick={handleResetMembersToSheet}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reset to Sheet</span>
+                </button>
+
+                <button
+                  onClick={() => setExportModalType('members')}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>Export to Sheet</span>
+                </button>
+
+                <button
+                  onClick={() => setIsAddMemberOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 rounded-lg transition-colors shadow-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Member</span>
+                </button>
+
+                <button
+                  onClick={handleSaveAllMembers}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-brand-red hover:bg-brand-redhover rounded-lg transition-colors shadow-sm"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Save &amp; Publish Live</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Filter Bar */}
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                <div className="relative flex-grow sm:w-64">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={memberSearch}
+                    onChange={(e) => setMemberSearch(e.target.value)}
+                    placeholder="Search by name, surname, occupation..."
+                    className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+
+                <select
+                  value={selectedDistrict}
+                  onChange={(e) => setSelectedDistrict(e.target.value)}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-brand-dark outline-none focus:ring-1 focus:ring-brand-red"
+                >
+                  <option value="All">All Districts ({members.length})</option>
+                  {districtOptions.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <span className="text-xs text-brand-muted">
+                Showing {filteredMembers.length} of {members.length} members
+              </span>
+            </div>
+
+            {/* Members Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              {filteredMembers.map((m) => (
+                <div
+                  key={m.id}
+                  className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs hover:shadow-md transition-shadow flex items-center justify-between gap-3"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    {/* Avatar */}
+                    <div className="relative w-12 h-12 rounded-full overflow-hidden bg-brand-red/10 border border-brand-red/20 shrink-0 flex items-center justify-center text-brand-red font-bold text-sm">
+                      {m.photo ? (
+                        <Image
+                          src={m.photo}
+                          alt={m.fullName}
+                          fill
+                          unoptimized
+                          className="object-cover"
+                        />
+                      ) : (
+                        <span>{m.fullName.charAt(0) || 'M'}</span>
+                      )}
+                    </div>
+
+                    {/* Member Info */}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-bold text-brand-dark truncate">{m.fullName}</p>
+                        {m.membershipId && (
+                          <span className="text-[10px] bg-slate-100 text-slate-600 font-mono font-bold px-1.5 py-0.2 rounded shrink-0">
+                            #{m.membershipId}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-brand-muted mt-0.5">
+                        <span className="truncate">{m.occupation || 'Community Member'}</span>
+                        <span>•</span>
+                        <span className="truncate">{m.district}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      title="Edit Member"
+                      onClick={() => setEditingMember(m)}
+                      className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      title="Remove Member"
+                      onClick={() => removeMember(m.id)}
+                      className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 5: GOOGLE SHEETS HUB                                  */}
         {/* ========================================================= */}
         {activeTab === 'sheets' && (
           <div className="space-y-6 animate-fade-in">
-            {/* Header info */}
             <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs">
               <div className="flex items-center gap-2 mb-1">
                 <Table className="w-5 h-5 text-emerald-600" />
@@ -1310,11 +1752,10 @@ export default function AdminPage() {
                 </h2>
               </div>
               <p className="text-sm text-brand-muted">
-                Your website is 100% powered by live Google Sheets. You can open any sheet in Google Drive, view or edit rows, and changes reflect seamlessly across the website.
+                Your entire website is connected directly to 4 live Google Sheets. You can open any sheet in Google Drive, view or edit rows, and changes reflect live across the website.
               </p>
             </div>
 
-            {/* Sheets Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Sheet 1: Photos */}
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md transition-shadow flex flex-col justify-between">
@@ -1334,7 +1775,7 @@ export default function AdminPage() {
                   <p className="text-xs text-brand-muted mb-4">
                     {GOOGLE_SHEETS.photos.description}
                   </p>
-                  <div className="space-y-1.5 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 font-mono">
+                  <div className="space-y-1 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 font-mono">
                     <p>Tab GID: <span className="font-bold text-slate-900">{GOOGLE_SHEETS.photos.gid}</span></p>
                     <p>Photos Loaded: <span className="font-bold text-slate-900">{photos.length}</span></p>
                   </div>
@@ -1345,7 +1786,7 @@ export default function AdminPage() {
                     onClick={() => setExportModalType('photos')}
                     className="text-xs font-semibold text-slate-700 hover:text-brand-dark bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors"
                   >
-                    Export Current Order
+                    Export Rows
                   </button>
                   <a
                     href={GOOGLE_SHEETS.photos.url}
@@ -1377,8 +1818,7 @@ export default function AdminPage() {
                   <p className="text-xs text-brand-muted mb-4">
                     {GOOGLE_SHEETS.videos.description}
                   </p>
-                  <div className="space-y-1.5 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 font-mono">
-                    <p>Tab: <span className="font-bold text-slate-900">Default (Sheet1)</span></p>
+                  <div className="space-y-1 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 font-mono">
                     <p>Videos Loaded: <span className="font-bold text-slate-900">{videos.length}</span></p>
                   </div>
                 </div>
@@ -1388,7 +1828,7 @@ export default function AdminPage() {
                     onClick={() => setExportModalType('videos')}
                     className="text-xs font-semibold text-slate-700 hover:text-brand-dark bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors"
                   >
-                    Export Current Order
+                    Export Rows
                   </button>
                   <a
                     href={GOOGLE_SHEETS.videos.url}
@@ -1420,13 +1860,19 @@ export default function AdminPage() {
                   <p className="text-xs text-brand-muted mb-4">
                     {GOOGLE_SHEETS.events.description}
                   </p>
-                  <div className="space-y-1.5 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 font-mono">
+                  <div className="space-y-1 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 font-mono">
                     <p>Tab GID: <span className="font-bold text-slate-900">{GOOGLE_SHEETS.events.gid}</span></p>
-                    <p>Endpoint: <span className="font-bold text-slate-900">/api/events</span></p>
+                    <p>Events Loaded: <span className="font-bold text-slate-900">{events.length}</span></p>
                   </div>
                 </div>
 
-                <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-end">
+                <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                  <button
+                    onClick={() => setExportModalType('events')}
+                    className="text-xs font-semibold text-slate-700 hover:text-brand-dark bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    Export Rows
+                  </button>
                   <a
                     href={GOOGLE_SHEETS.events.url}
                     target="_blank"
@@ -1457,13 +1903,18 @@ export default function AdminPage() {
                   <p className="text-xs text-brand-muted mb-4">
                     {GOOGLE_SHEETS.members.description}
                   </p>
-                  <div className="space-y-1.5 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 font-mono">
-                    <p>Tab GID: <span className="font-bold text-slate-900">{GOOGLE_SHEETS.members.gid}</span></p>
-                    <p>Endpoint: <span className="font-bold text-slate-900">/api/members</span></p>
+                  <div className="space-y-1 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 font-mono">
+                    <p>Members Loaded: <span className="font-bold text-slate-900">{members.length}</span></p>
                   </div>
                 </div>
 
-                <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-end">
+                <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                  <button
+                    onClick={() => setExportModalType('members')}
+                    className="text-xs font-semibold text-slate-700 hover:text-brand-dark bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    Export Rows
+                  </button>
                   <a
                     href={GOOGLE_SHEETS.members.url}
                     target="_blank"
@@ -1476,275 +1927,12 @@ export default function AdminPage() {
                 </div>
               </div>
             </div>
-
-            {/* How It Works Guide */}
-            <div className="bg-gradient-to-r from-slate-900 to-brand-dark text-white p-6 sm:p-8 rounded-2xl border border-slate-800 shadow-md">
-              <h3 className="font-serif text-lg sm:text-xl font-bold mb-2 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-amber-400" />
-                <span>How Google Sheets Powers the CSVS Platform</span>
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-300 mb-4 leading-relaxed">
-                By using Google Sheets as your database, there is zero maintenance cost, no complex server management, and your Sangham organizers can update data directly in spreadsheets.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                <div className="bg-white/10 p-3.5 rounded-xl border border-white/10">
-                  <p className="font-bold text-white mb-1">1. Photo Links</p>
-                  <p className="text-slate-300">Paste any Google Drive photo link into the spreadsheet. The website automatically extracts the image and renders it in high resolution.</p>
-                </div>
-                <div className="bg-white/10 p-3.5 rounded-xl border border-white/10">
-                  <p className="font-bold text-white mb-1">2. Video Support</p>
-                  <p className="text-slate-300">Paste YouTube, Google Drive, or Vimeo links in the Videos sheet. The gallery embeds them directly with custom playback.</p>
-                </div>
-                <div className="bg-white/10 p-3.5 rounded-xl border border-white/10">
-                  <p className="font-bold text-white mb-1">3. Live Rearrangement</p>
-                  <p className="text-slate-300">Rearrange any photo or video in this Admin Portal and click &ldquo;Save &amp; Publish&rdquo; for instant live reordering across all visitor browsers.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================= */}
-        {/* TAB 4: WEBSITE CONTENT EDITOR                             */}
-        {/* ========================================================= */}
-        {activeTab === 'content' && (
-          <div className="space-y-6 animate-fade-in">
-            <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-dark">
-                  Website Content Editor
-                </h2>
-                <p className="text-xs sm:text-sm text-brand-muted mt-1">
-                  Customize hero banner texts and official Sangham contact information.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleResetContent}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Reset All</span>
-                </button>
-                <button
-                  onClick={handleSaveContent}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-brand-red hover:bg-brand-redhover rounded-lg transition-colors shadow-sm"
-                >
-                  <Save className="w-3.5 h-3.5" />
-                  <span>Save All Changes</span>
-                </button>
-              </div>
-            </div>
-
-            {/* SECTION 1: HERO BANNER */}
-            <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-2xs">
-              <div className="flex items-center gap-2 mb-6 pb-3 border-b border-slate-100">
-                <Sparkles className="w-5 h-5 text-amber-500" />
-                <h3 className="font-serif text-lg font-bold text-brand-dark">Hero Banner</h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div className="sm:col-span-2">
-                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
-                    Banner Top Badge
-                  </label>
-                  <input
-                    type="text"
-                    value={content.hero.badge}
-                    onChange={(e) => handleContentChange('hero', 'badge', e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
-                    Main Title Prefix
-                  </label>
-                  <input
-                    type="text"
-                    value={content.hero.title}
-                    onChange={(e) => handleContentChange('hero', 'title', e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
-                    Highlighted Title
-                  </label>
-                  <input
-                    type="text"
-                    value={content.hero.titleHighlight}
-                    onChange={(e) => handleContentChange('hero', 'titleHighlight', e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
-                    Hero Description
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={content.hero.description}
-                    onChange={(e) => handleContentChange('hero', 'description', e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none leading-relaxed"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* SECTION 2: OFFICIAL CONTACT INFO */}
-            <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-2xs">
-              <div className="flex items-center gap-2 mb-6 pb-3 border-b border-slate-100">
-                <Phone className="w-5 h-5 text-brand-red" />
-                <h3 className="font-serif text-lg font-bold text-brand-dark">Official Contact Details</h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div>
-                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
-                    Organizer / President Name
-                  </label>
-                  <input
-                    type="text"
-                    value={content.contact.personName}
-                    onChange={(e) => handleContentChange('contact', 'personName', e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
-                    Phone Number
-                  </label>
-                  <input
-                    type="text"
-                    value={content.contact.phone}
-                    onChange={(e) => handleContentChange('contact', 'phone', e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
-                    Official Email
-                  </label>
-                  <input
-                    type="email"
-                    value={content.contact.email}
-                    onChange={(e) => handleContentChange('contact', 'email', e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
-                    Sangham Address
-                  </label>
-                  <input
-                    type="text"
-                    value={content.contact.address}
-                    onChange={(e) => handleContentChange('contact', 'address', e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================= */}
-        {/* TAB 5: LIVE PREVIEW                                       */}
-        {/* ========================================================= */}
-        {activeTab === 'preview' && (
-          <div className="space-y-6 animate-fade-in">
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
-              <div>
-                <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-dark">
-                  Live Gallery Preview
-                </h2>
-                <p className="text-xs sm:text-sm text-brand-muted mt-1">
-                  Preview how your rearranged photos and videos appear to visitors on the live website.
-                </p>
-              </div>
-              <Link
-                href="/gallery"
-                target="_blank"
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-brand-red hover:bg-brand-redhover rounded-lg transition-colors shadow-xs"
-              >
-                <span>Open /gallery Page</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
-            {/* Photos Preview Section */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
-              <h3 className="font-serif text-lg font-bold text-brand-dark mb-4 flex items-center gap-2">
-                <ImageIcon className="w-5 h-5 text-brand-red" />
-                <span>Photos ({photos.length} items)</span>
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                {photos.map((p, idx) => (
-                  <div key={p.id} className="relative aspect-4/3 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 group">
-                    <Image
-                      src={p.url}
-                      alt={p.eventName}
-                      fill
-                      unoptimized
-                      className="object-cover group-hover:scale-105 transition-transform"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-2 text-white">
-                      <span className="text-[10px] font-bold text-amber-300">#{idx + 1}</span>
-                      <p className="text-xs font-semibold truncate leading-tight">{p.eventName}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Videos Preview Section */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
-              <h3 className="font-serif text-lg font-bold text-brand-dark mb-4 flex items-center gap-2">
-                <Film className="w-5 h-5 text-brand-red" />
-                <span>Videos ({videos.length} recordings)</span>
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {videos.map((v, idx) => (
-                  <div key={v.id} className="relative aspect-video rounded-xl overflow-hidden bg-slate-900 border border-slate-200 group cursor-pointer"
-                       onClick={() => setPreviewVideo(v)}>
-                    {v.thumbnailUrl ? (
-                      <Image
-                        src={v.thumbnailUrl}
-                        alt={v.eventName}
-                        fill
-                        unoptimized
-                        className="object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-500">
-                        <Film className="w-8 h-8" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/10 transition-colors">
-                      <Play className="w-8 h-8 text-white drop-shadow-md fill-white" />
-                    </div>
-                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 p-3 text-white">
-                      <span className="text-[10px] font-mono text-amber-300">#{idx + 1}</span>
-                      <p className="text-xs font-bold truncate">{v.eventName}</p>
-                      <p className="text-[10px] text-slate-300">{v.date}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         )}
       </main>
 
       {/* ========================================================= */}
-      {/* MODAL: EDIT PHOTO DETAILS                                 */}
+      {/* MODAL: EDIT PHOTO                                         */}
       {/* ========================================================= */}
       {editingPhoto && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-fade-in backdrop-blur-xs">
@@ -1763,7 +1951,6 @@ export default function AdminPage() {
             </div>
 
             <form onSubmit={handleSavePhotoDetails} className="space-y-4 text-xs">
-              {/* Image Preview */}
               <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
                 <Image
                   src={editingPhoto.url}
@@ -1789,7 +1976,7 @@ export default function AdminPage() {
 
               <div>
                 <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
-                  Event Date (YYYY-MM-DD or Text)
+                  Event Date
                 </label>
                 <input
                   type="text"
@@ -1811,9 +1998,6 @@ export default function AdminPage() {
                   onChange={(e) => setEditingPhoto({ ...editingPhoto, url: e.target.value })}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark font-mono text-[11px] focus:ring-1 focus:ring-brand-red outline-none"
                 />
-                <p className="text-[10px] text-slate-400 mt-1">
-                  Supports Google Drive sharing links (https://drive.google.com/file/d/...) or web image URLs.
-                </p>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
@@ -1865,7 +2049,7 @@ export default function AdminPage() {
                   required
                   value={newPhotoUrl}
                   onChange={(e) => setNewPhotoUrl(e.target.value)}
-                  placeholder="https://drive.google.com/file/d/... or direct image link"
+                  placeholder="https://drive.google.com/file/d/..."
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark font-mono text-[11px] focus:ring-1 focus:ring-brand-red outline-none"
                 />
               </div>
@@ -1879,39 +2063,21 @@ export default function AdminPage() {
                   required
                   value={newPhotoEvent}
                   onChange={(e) => setNewPhotoEvent(e.target.value)}
-                  placeholder="e.g. ప్రమాణ స్వీకారోత్సవం"
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
-                    Event Date
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newPhotoDate}
-                    onChange={(e) => setNewPhotoDate(e.target.value)}
-                    placeholder="YYYY-MM-DD"
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
-                    Insert Position
-                  </label>
-                  <select
-                    value={newPhotoPosition}
-                    onChange={(e) => setNewPhotoPosition(e.target.value as 'top' | 'bottom')}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark bg-white focus:ring-1 focus:ring-brand-red outline-none"
-                  >
-                    <option value="top">At the Top (#1)</option>
-                    <option value="bottom">At the Bottom (Last)</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Event Date
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newPhotoDate}
+                  onChange={(e) => setNewPhotoDate(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                />
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
@@ -1935,7 +2101,7 @@ export default function AdminPage() {
       )}
 
       {/* ========================================================= */}
-      {/* MODAL: EDIT VIDEO DETAILS                                 */}
+      {/* MODAL: EDIT VIDEO                                         */}
       {/* ========================================================= */}
       {editingVideo && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-fade-in backdrop-blur-xs">
@@ -2094,7 +2260,535 @@ export default function AdminPage() {
       )}
 
       {/* ========================================================= */}
-      {/* MODAL: VIDEO PLAYBACK PREVIEW                             */}
+      {/* MODAL: EDIT EVENT DETAILS                                 */}
+      {/* ========================================================= */}
+      {editingEvent && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-fade-in backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+              <h3 className="font-serif text-lg font-bold text-brand-dark flex items-center gap-2">
+                <Edit2 className="w-4 h-4 text-brand-red" />
+                <span>Edit Event Details</span>
+              </h3>
+              <button
+                onClick={() => setEditingEvent(null)}
+                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEventDetails} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Event Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editingEvent.title}
+                  onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Category / Type
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingEvent.type}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, type: e.target.value })}
+                    placeholder="Community, Spiritual..."
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Date
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingEvent.date}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, date: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Time
+                  </label>
+                  <input
+                    type="text"
+                    value={editingEvent.time}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, time: e.target.value })}
+                    placeholder="e.g. 10:00 AM – 1:00 PM"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    value={editingEvent.location}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, location: e.target.value })}
+                    placeholder="e.g. Nizamabad"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Description
+                </label>
+                <textarea
+                  rows={3}
+                  value={editingEvent.description}
+                  onChange={(e) => setEditingEvent({ ...editingEvent, description: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Event Banner / Photo URL
+                </label>
+                <input
+                  type="text"
+                  value={editingEvent.image || ''}
+                  onChange={(e) => setEditingEvent({ ...editingEvent, image: e.target.value })}
+                  placeholder="https://drive.google.com/file/d/..."
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark font-mono text-[11px] focus:ring-1 focus:ring-brand-red outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingEvent(null)}
+                  className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-lg bg-brand-red hover:bg-brand-redhover text-white font-bold shadow-xs"
+                >
+                  Update Event
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL: ADD EVENT                                          */}
+      {/* ========================================================= */}
+      {isAddEventOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-fade-in backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+              <h3 className="font-serif text-lg font-bold text-brand-dark flex items-center gap-2">
+                <Plus className="w-5 h-5 text-brand-red" />
+                <span>Add Community Event</span>
+              </h3>
+              <button
+                onClick={() => setIsAddEventOpen(false)}
+                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddEventSubmit} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Event Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newEvent.title}
+                  onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                  placeholder="e.g. Annual Community Spiritual Gathering"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Category
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newEvent.type}
+                    onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}
+                    placeholder="Community, Spiritual..."
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Date (YYYY-MM-DD)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newEvent.date}
+                    onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Time
+                  </label>
+                  <input
+                    type="text"
+                    value={newEvent.time}
+                    onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
+                    placeholder="10:00 AM – 1:00 PM"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    value={newEvent.location}
+                    onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                    placeholder="Nizamabad Central"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Description
+                </label>
+                <textarea
+                  rows={3}
+                  value={newEvent.description}
+                  onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                  placeholder="Details about the function, blessings, prasadam, etc."
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Banner / Image Link
+                </label>
+                <input
+                  type="text"
+                  value={newEvent.image}
+                  onChange={(e) => setNewEvent({ ...newEvent, image: e.target.value })}
+                  placeholder="https://drive.google.com/file/d/... or image URL"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark font-mono text-[11px] focus:ring-1 focus:ring-brand-red outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsAddEventOpen(false)}
+                  className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-lg bg-brand-red hover:bg-brand-redhover text-white font-bold shadow-xs"
+                >
+                  Add Event
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL: EDIT MEMBER DETAILS                                */}
+      {/* ========================================================= */}
+      {editingMember && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-fade-in backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+              <h3 className="font-serif text-lg font-bold text-brand-dark flex items-center gap-2">
+                <Edit2 className="w-4 h-4 text-brand-red" />
+                <span>Edit Member Details</span>
+              </h3>
+              <button
+                onClick={() => setEditingMember(null)}
+                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveMemberDetails} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    First / Given Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingMember.name}
+                    onChange={(e) => setEditingMember({ ...editingMember, name: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Surname / Gotram
+                  </label>
+                  <input
+                    type="text"
+                    value={editingMember.surname}
+                    onChange={(e) => setEditingMember({ ...editingMember, surname: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Full Display Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editingMember.fullName}
+                  onChange={(e) => setEditingMember({ ...editingMember, fullName: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    District / City
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingMember.district}
+                    onChange={(e) => setEditingMember({ ...editingMember, district: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Membership ID
+                  </label>
+                  <input
+                    type="text"
+                    value={editingMember.membershipId || ''}
+                    onChange={(e) => setEditingMember({ ...editingMember, membershipId: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Occupation / Profession
+                </label>
+                <input
+                  type="text"
+                  value={editingMember.occupation}
+                  onChange={(e) => setEditingMember({ ...editingMember, occupation: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Photo URL or Drive Link
+                </label>
+                <input
+                  type="text"
+                  value={editingMember.photo || ''}
+                  onChange={(e) => setEditingMember({ ...editingMember, photo: e.target.value })}
+                  placeholder="https://drive.google.com/file/d/..."
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark font-mono text-[11px] focus:ring-1 focus:ring-brand-red outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingMember(null)}
+                  className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-lg bg-brand-red hover:bg-brand-redhover text-white font-bold shadow-xs"
+                >
+                  Update Member
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL: ADD MEMBER                                         */}
+      {/* ========================================================= */}
+      {isAddMemberOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-fade-in backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+              <h3 className="font-serif text-lg font-bold text-brand-dark flex items-center gap-2">
+                <Plus className="w-5 h-5 text-brand-red" />
+                <span>Add Community Member</span>
+              </h3>
+              <button
+                onClick={() => setIsAddMemberOpen(false)}
+                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddMemberSubmit} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newMember.name}
+                    onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
+                    placeholder="e.g. Ramesh"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Surname / Gotram
+                  </label>
+                  <input
+                    type="text"
+                    value={newMember.surname}
+                    onChange={(e) => setNewMember({ ...newMember, surname: e.target.value })}
+                    placeholder="e.g. Jagannatham"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    District
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newMember.district}
+                    onChange={(e) => setNewMember({ ...newMember, district: e.target.value })}
+                    placeholder="Nizamabad"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Membership ID
+                  </label>
+                  <input
+                    type="text"
+                    value={newMember.membershipId}
+                    onChange={(e) => setNewMember({ ...newMember, membershipId: e.target.value })}
+                    placeholder="e.g. 104"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Occupation / Profession
+                </label>
+                <input
+                  type="text"
+                  value={newMember.occupation}
+                  onChange={(e) => setNewMember({ ...newMember, occupation: e.target.value })}
+                  placeholder="e.g. Business / Teacher / Engineer"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark focus:ring-1 focus:ring-brand-red outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Photo URL or Drive Link
+                </label>
+                <input
+                  type="text"
+                  value={newMember.photo}
+                  onChange={(e) => setNewMember({ ...newMember, photo: e.target.value })}
+                  placeholder="https://drive.google.com/file/d/..."
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-brand-dark font-mono text-[11px] focus:ring-1 focus:ring-brand-red outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsAddMemberOpen(false)}
+                  className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-lg bg-brand-red hover:bg-brand-redhover text-white font-bold shadow-xs"
+                >
+                  Add Member
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL: VIDEO PREVIEW                                      */}
       {/* ========================================================= */}
       {previewVideo && (
         <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 animate-fade-in backdrop-blur-sm">
@@ -2130,7 +2824,7 @@ export default function AdminPage() {
                   className="w-full h-full border-0"
                 />
               ) : (
-                <p className="text-sm text-slate-400">No preview available for this video format.</p>
+                <p className="text-sm text-slate-400">No playback preview available.</p>
               )}
             </div>
           </div>
@@ -2138,7 +2832,7 @@ export default function AdminPage() {
       )}
 
       {/* ========================================================= */}
-      {/* MODAL: EXPORT TO GOOGLE SHEET (COPYABLE ROWS)              */}
+      {/* MODAL: EXPORT TO GOOGLE SHEET                             */}
       {/* ========================================================= */}
       {exportModalType && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-fade-in backdrop-blur-xs">
@@ -2146,7 +2840,7 @@ export default function AdminPage() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
               <h3 className="font-serif text-lg font-bold text-brand-dark flex items-center gap-2">
                 <Table className="w-5 h-5 text-emerald-600" />
-                <span>Export to Google Sheet ({exportModalType === 'photos' ? 'Photos' : 'Videos'})</span>
+                <span className="capitalize">Export {exportModalType} to Google Sheet</span>
               </h3>
               <button
                 onClick={() => setExportModalType(null)}
@@ -2171,7 +2865,7 @@ export default function AdminPage() {
 
             <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
               <a
-                href={exportModalType === 'photos' ? GOOGLE_SHEETS.photos.url : GOOGLE_SHEETS.videos.url}
+                href={GOOGLE_SHEETS[exportModalType].url}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3.5 py-2 rounded-lg transition-colors"
