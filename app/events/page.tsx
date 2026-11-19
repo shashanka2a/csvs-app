@@ -27,25 +27,43 @@ function getCategoryColor(type: string): string {
 
 function EventCardImage({ src, title }: { src?: string; title: string }) {
   const [error, setError] = useState(false);
+  const [imgSrc, setImgSrc] = useState(src);
 
-  if (src && !error) {
+  useEffect(() => {
+    setImgSrc(src);
+    setError(false);
+  }, [src]);
+
+  const handleImageError = () => {
+    // If lh3 direct CDN fails, try Google Drive thumbnail endpoint
+    if (imgSrc && imgSrc.includes('lh3.googleusercontent.com/d/')) {
+      const id = imgSrc.split('/d/')[1];
+      if (id) {
+        setImgSrc(`https://drive.google.com/thumbnail?id=${id}&sz=w1200`);
+        return;
+      }
+    }
+    setError(true);
+  };
+
+  if (imgSrc && !error) {
     return (
-      <div className="relative h-48 w-full overflow-hidden bg-brand-cream">
+      <div className="relative h-52 w-full overflow-hidden bg-brand-cream">
         <Image
-          src={src}
+          src={imgSrc}
           alt={title}
           fill
           unoptimized
-          className="object-cover group-hover:scale-105 transition-transform duration-500"
+          className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          onError={() => setError(true)}
+          onError={handleImageError}
         />
       </div>
     );
   }
 
   return (
-    <div className="h-48 w-full bg-gradient-to-br from-brand-cream to-amber-50/50 flex flex-col items-center justify-center border-b border-brand-border/60">
+    <div className="h-52 w-full bg-gradient-to-br from-brand-cream to-amber-50/50 flex flex-col items-center justify-center border-b border-brand-border/60">
       <CalendarCheck className="w-12 h-12 text-brand-red/40 mb-2" />
       <span className="text-xs font-semibold text-brand-muted uppercase tracking-wider">Sangham Event</span>
     </div>

@@ -23,18 +23,32 @@ function formatPhotoUrl(rawUrl: string): string {
   const trimmed = rawUrl.trim();
   if (!trimmed) return '';
 
-  // Google Drive standard share link: https://drive.google.com/file/d/FILE_ID/view...
-  const driveFileMatch = trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-  if (driveFileMatch && driveFileMatch[1]) {
-    return `https://lh3.googleusercontent.com/d/${driveFileMatch[1]}`;
+  // Extract Google Drive ID from /file/d/ID/ or open?id=ID or uc?id=ID
+  const fileIdMatch =
+    trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
+    trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+
+  if (
+    fileIdMatch &&
+    fileIdMatch[1] &&
+    (trimmed.includes('drive.google.com') ||
+      trimmed.includes('docs.google.com') ||
+      trimmed.includes('googleusercontent.com'))
+  ) {
+    return `https://lh3.googleusercontent.com/d/${fileIdMatch[1]}`;
   }
 
-  // Google Drive open?id= or uc?id=
-  const driveIdMatch = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  if ((trimmed.includes('drive.google.com') || trimmed.includes('docs.google.com')) && driveIdMatch && driveIdMatch[1]) {
-    return `https://lh3.googleusercontent.com/d/${driveIdMatch[1]}`;
-  }
+  return trimmed;
+}
 
+// Format time string to remove redundant seconds (e.g., "11:00:00 AM" -> "11:00 AM")
+function formatTime(timeStr: string): string {
+  if (!timeStr) return '';
+  const trimmed = timeStr.trim();
+  const match = trimmed.match(/^(\d{1,2}:\d{2}):\d{2}(\s*[AaPp][Mm])?$/);
+  if (match) {
+    return `${match[1]}${match[2] ? ' ' + match[2].trim() : ''}`;
+  }
   return trimmed;
 }
 
@@ -55,48 +69,73 @@ function parseDateParts(dateStr: string) {
   return { month: 'DATE', day: dateStr, year: '' };
 }
 
-function parseCsv(text: string): SanghamEvent[] {
-  const lines = text.trim().split('\n');
-  if (lines.length <= 1) return [];
+// Full RFC-4180 compliant CSV parser that respects newlines inside quoted fields
+function parseCSV(text: string): string[][] {
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
+  let currentField = '';
+  let insideQuotes = false;
 
-  // Parse CSV line taking quotes into account
-  const parseLine = (line: string): string[] => {
-    const result: string[] = [];
-    let current = '';
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      if (char === '"') {
-        if (inQuotes && line[i + 1] === '"') {
-          current += '"';
-          i++;
-        } else {
-          inQuotes = !inQuotes;
-        }
-      } else if (char === ',' && !inQuotes) {
-        result.push(current.trim());
-        current = '';
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (char === '"') {
+      if (insideQuotes && text[i + 1] === '"') {
+        currentField += '"';
+        i++;
       } else {
-        current += char;
+        insideQuotes = !insideQuotes;
       }
+    } else if (char === ',' && !insideQuotes) {
+      currentRow.push(currentField.trim());
+      currentField = '';
+    } else if ((char === '\r' || char === '\n') && !insideQuotes) {
+      if (char === '\r' && text[i + 1] === '\n') {
+        i++;
+      }
+      currentRow.push(currentField.trim());
+      currentField = '';
+      if (currentRow.some((field) => field.length > 0)) {
+        rows.push(currentRow);
+      }
+      currentRow = [];
+    } else {
+      currentField += char;
     }
-    result.push(current.trim());
-    return result;
-  };
+  }
 
-  const headers = parseLine(lines[0]).map((h) => h.trim().toLowerCase());
+  if (currentField.length > 0 || currentRow.length > 0) {
+    currentRow.push(currentField.trim());
+    if (currentRow.some((field) => field.length > 0)) {
+      rows.push(currentRow);
+    }
+  }
+
+  return rows;
+}
+
+function parseCsv(text: string): SanghamEvent[] {
+  const rows = parseCSV(text);
+  if (rows.length <= 1) return [];
+
+  const headers = rows[0].map((h) => h.trim().toLowerCase());
 
   const nameIdx = headers.findIndex(
-    (h) => h === 'event name' || h.includes('event name') || h === 'title' || h.includes('name')
+    (h) => h === 'event name' || h === 'title' || (h.includes('event') && h.includes('name'))
   );
   const descIdx = headers.findIndex((h) => h.includes('description') || h.includes('desc'));
   const typeIdx = headers.findIndex(
-    (h) => h === 'event type' || h.includes('type') || h.includes('category') || h.includes('tag')
+    (h) => h === 'event type' || h.includes('type') || h.includes('category')
   );
-  const dateIdx = headers.findIndex((h) => h === 'date' || h.includes('date'));
-  const timeIdx = headers.findIndex((h) => h === 'time' || h.includes('time'));
+
+  // Explicitly match Date and Time columns (NOT timestamp)
+  const dateIdx = headers.findIndex(
+    (h) => h === 'date' || (h.includes('date') && !h.includes('timestamp'))
+  );
+  const timeIdx = headers.findIndex(
+    (h) => h === 'time' || (h.includes('time') && !h.includes('timestamp') && !h.includes('date'))
+  );
   const locIdx = headers.findIndex(
-    (h) => h === 'location' || h.includes('location') || h.includes('place') || h.includes('venue')
+    (h) => h === 'location' || h.includes('location') || h.includes('venue') || h.includes('place')
   );
   const photoIdx = headers.findIndex(
     (h) => h === 'photo' || h.includes('photo') || h.includes('image') || h.includes('picture') || h.includes('dp')
@@ -104,10 +143,8 @@ function parseCsv(text: string): SanghamEvent[] {
 
   const events: SanghamEvent[] = [];
 
-  for (let i = 1; i < lines.length; i++) {
-    const row = lines[i].trim();
-    if (!row) continue;
-    const values = parseLine(row);
+  for (let i = 1; i < rows.length; i++) {
+    const values = rows[i];
     if (values.length < 2) continue;
 
     const title = nameIdx >= 0 && nameIdx < values.length ? values[nameIdx].trim() : '';
@@ -117,8 +154,10 @@ function parseCsv(text: string): SanghamEvent[] {
     const type = typeIdx >= 0 && typeIdx < values.length && values[typeIdx].trim()
       ? values[typeIdx].trim()
       : 'Community';
-    const date = dateIdx >= 0 && dateIdx < values.length ? values[dateIdx].trim() : '';
-    const time = timeIdx >= 0 && timeIdx < values.length ? values[timeIdx].trim() : '';
+    const rawDate = dateIdx >= 0 && dateIdx < values.length ? values[dateIdx].trim() : '';
+    const rawTime = timeIdx >= 0 && timeIdx < values.length ? values[timeIdx].trim() : '';
+    const date = rawDate;
+    const time = formatTime(rawTime);
     const location = locIdx >= 0 && locIdx < values.length && values[locIdx].trim()
       ? values[locIdx].trim()
       : 'Nizamabad';
