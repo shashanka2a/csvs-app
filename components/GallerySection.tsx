@@ -33,7 +33,7 @@ export default function GallerySection() {
           }
         }
       })
-      .catch(() => { });
+      .catch(() => {});
   }, []);
 
   // Keyboard navigation for Lightbox
