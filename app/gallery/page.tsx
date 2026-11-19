@@ -12,11 +12,15 @@ import {
   Calendar,
   Images,
   AlertCircle,
+  Search,
+  Maximize2,
+  Sparkles,
 } from 'lucide-react';
 import type { GalleryGroup, GalleryItem } from '@/app/api/gallery/route';
 
 export default function GalleryPage() {
   const [groups, setGroups] = useState<GalleryGroup[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [isUnauthorized, setIsUnauthorized] = useState<boolean>(false);
   const [totalPhotos, setTotalPhotos] = useState<number>(0);
@@ -87,6 +91,39 @@ export default function GalleryPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activePhoto, showNext, showPrev]);
 
+  // Filter groups and photos based on search query
+  const filteredGroups = groups
+    .map((group) => {
+      const q = searchQuery.toLowerCase().trim();
+      if (!q) return group;
+
+      const groupMatches =
+        group.eventName.toLowerCase().includes(q) ||
+        group.displayDate.toLowerCase().includes(q) ||
+        group.date.toLowerCase().includes(q);
+
+      if (groupMatches) return group;
+
+      const matchingPhotos = group.photos.filter(
+        (p) =>
+          p.eventName.toLowerCase().includes(q) ||
+          p.date.toLowerCase().includes(q)
+      );
+
+      if (matchingPhotos.length > 0) {
+        return {
+          ...group,
+          photos: matchingPhotos,
+          total: matchingPhotos.length,
+        };
+      }
+
+      return null;
+    })
+    .filter((g): g is GalleryGroup => g !== null);
+
+  const displayedPhotoCount = filteredGroups.reduce((acc, g) => acc + g.total, 0);
+
   return (
     <div className="bg-slate-50 min-h-screen">
       {/* 1. Hero banner */}
@@ -99,7 +136,7 @@ export default function GalleryPage() {
               </span>
               <h1 className="font-serif text-4xl md:text-5xl font-bold mb-3">Our Gallery</h1>
               <p className="text-gray-300 text-base md:text-lg max-w-2xl leading-relaxed">
-                Cherished moments, celebrations, and gatherings of Chattada Sri Vaishnava Sangham.
+                Cherished moments and gatherings of Chattada Sri Vaishnava Sangham, organized by event name and date.
               </p>
             </div>
 
@@ -137,47 +174,87 @@ export default function GalleryPage() {
         </div>
       )}
 
+      {/* Search & Filter Bar */}
+      <div className="bg-white border-b border-brand-border sticky top-16 z-30 shadow-xs py-3.5">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="relative w-full sm:w-96">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-muted pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search event name or date..."
+                className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-brand-border rounded-lg text-brand-dark placeholder-brand-muted focus:outline-none focus:ring-2 focus:ring-brand-red focus:bg-white transition-all"
+              />
+            </div>
+
+            <div className="flex items-center justify-between sm:justify-end gap-3 text-xs text-brand-muted">
+              <span>
+                Showing <strong className="text-brand-dark">{displayedPhotoCount}</strong> of {totalPhotos} photos
+              </span>
+              <span className="hidden sm:inline">&bull;</span>
+              <span>
+                <strong className="text-brand-dark">{filteredGroups.length}</strong> event albums
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* 2. Gallery Groups (Google Photos style date & event sections) */}
       <section className="container mx-auto px-4 lg:px-8 py-12 space-y-14">
-        {groups.length === 0 && !loading && (
+        {filteredGroups.length === 0 && !loading && (
           <div className="text-center py-20 bg-white rounded-2xl border border-brand-border p-8 max-w-lg mx-auto">
             <Images className="w-12 h-12 text-brand-muted/40 mx-auto mb-3" />
-            <p className="text-brand-dark font-serif font-bold text-lg mb-1">No photos loaded</p>
+            <p className="text-brand-dark font-serif font-bold text-lg mb-1">
+              {searchQuery ? 'No matching photos found' : 'No photos loaded'}
+            </p>
             <p className="text-brand-muted text-sm">
-              Photos uploaded through your Google Form will appear here organized by date.
+              {searchQuery
+                ? 'Try a different event name or date in the search bar.'
+                : 'Photos uploaded through your Google Form will appear here organized by date.'}
             </p>
           </div>
         )}
 
-        {groups.map((group) => (
+        {filteredGroups.map((group) => (
           <div key={group.groupKey} className="space-y-4">
-            {/* Google Photos Style Header: Event Name + Date + Photo Count */}
-            <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 pb-3 border-b border-gray-200/80">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-brand-red shrink-0" />
-                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-dark tracking-tight">
-                  {group.eventName}
-                </h2>
+            {/* Header: Event Name Badge + Title + Date from form + Photo Count */}
+            <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-3 pb-3 border-b border-gray-200/80">
+              <div className="flex items-start sm:items-center gap-3">
+                <div className="w-3.5 h-3.5 rounded-full bg-brand-red shrink-0 mt-1 sm:mt-0" />
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-[10px] font-bold text-brand-red tracking-wider uppercase bg-brand-red/10 px-2 py-0.5 rounded-full inline-block">
+                      Event Album
+                    </span>
+                  </div>
+                  <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-dark tracking-tight">
+                    {group.eventName}
+                  </h2>
+                </div>
               </div>
               <div className="flex items-center gap-2 text-xs sm:text-sm text-brand-muted pl-6 sm:pl-0">
-                <span className="inline-flex items-center gap-1 font-semibold text-brand-dark bg-brand-cream/80 px-2.5 py-0.5 rounded-md border border-brand-border/60">
-                  <Calendar className="w-3 h-3 text-brand-red" />
+                <span className="inline-flex items-center gap-1 font-semibold text-brand-dark bg-brand-cream/80 px-2.5 py-1 rounded-md border border-brand-border/60">
+                  <Calendar className="w-3.5 h-3.5 text-brand-red" />
                   {group.displayDate}
                 </span>
                 <span>&bull;</span>
-                <span>
+                <span className="font-medium">
                   {group.total} {group.total === 1 ? 'photo' : 'photos'}
                 </span>
               </div>
             </div>
 
-            {/* Photo Grid */}
+            {/* Photo Grid with Event Name hover badge */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
               {group.photos.map((photo, pIdx) => (
                 <div
                   key={photo.id}
                   onClick={() => openLightbox(photo, group.photos)}
                   className="group relative aspect-[4/3] rounded-xl overflow-hidden bg-brand-cream border border-brand-border/80 shadow-2xs hover:shadow-lg transition-all duration-300 cursor-pointer hover:-translate-y-0.5"
+                  title={`${group.eventName} - Click to view full photo`}
                 >
                   <Image
                     src={photo.url}
@@ -187,7 +264,19 @@ export default function GalleryPage() {
                     className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                   />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                  {/* Hover Overlay with Event Name & Date */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-2.5 sm:p-3 flex flex-col justify-end">
+                    <span className="text-white text-xs font-bold truncate leading-tight drop-shadow-xs">
+                      {group.eventName}
+                    </span>
+                    <span className="text-gray-300 text-[10px] sm:text-[11px] leading-tight flex items-center gap-1 mt-0.5 drop-shadow-xs">
+                      <Calendar className="w-3 h-3 text-brand-gold shrink-0" />
+                      <span>{group.displayDate}</span>
+                    </span>
+                    <div className="absolute top-2 right-2 bg-black/60 text-white p-1 rounded-md opacity-90">
+                      <Maximize2 className="w-3 h-3" />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -201,16 +290,29 @@ export default function GalleryPage() {
           role="dialog"
           aria-modal="true"
           className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between select-none animate-fade-in"
+          onClick={closeLightbox}
         >
-          {/* Top Bar */}
-          <div className="p-4 sm:p-6 flex items-center justify-between text-white border-b border-white/10 shrink-0">
+          {/* Top Bar with Event Name Badge */}
+          <div
+            className="p-4 sm:p-6 flex items-center justify-between text-white border-b border-white/10 shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex flex-col">
-              <span className="font-serif font-bold text-base sm:text-lg text-white truncate max-w-xs sm:max-w-md">
-                {activePhoto.eventName}
-              </span>
-              <span className="text-xs text-gray-400">
-                {activePhoto.date} &bull; Photo {currentIndex + 1} of {activeGroupPhotos.length}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="bg-brand-red text-white text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded shadow-2xs">
+                  Event
+                </span>
+                <span className="font-serif font-bold text-base sm:text-xl text-white truncate max-w-xs sm:max-w-xl">
+                  {activePhoto.eventName}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
+                <span className="text-brand-gold font-medium">{activePhoto.date}</span>
+                <span>&bull;</span>
+                <span>
+                  Photo {currentIndex + 1} of {activeGroupPhotos.length}
+                </span>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -226,7 +328,7 @@ export default function GalleryPage() {
               <button
                 type="button"
                 onClick={closeLightbox}
-                className="p-2 rounded-full hover:bg-white/10 text-gray-300 hover:text-white transition-colors"
+                className="p-2 rounded-full hover:bg-white/10 text-gray-300 hover:text-white transition-colors cursor-pointer"
                 title="Close (Esc)"
               >
                 <X className="w-6 h-6" />
@@ -244,7 +346,7 @@ export default function GalleryPage() {
                   e.stopPropagation();
                   showPrev();
                 }}
-                className="absolute left-3 sm:left-6 z-10 p-3 rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/20 transition-transform active:scale-95"
+                className="absolute left-3 sm:left-6 z-10 p-3 rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/20 transition-transform active:scale-95 cursor-pointer"
                 title="Previous photo (Left arrow)"
               >
                 <ChevronLeft className="w-6 h-6" />
@@ -257,6 +359,7 @@ export default function GalleryPage() {
                 src={activePhoto.url}
                 alt={activePhoto.eventName}
                 className="max-h-[75vh] sm:max-h-[82vh] max-w-full w-auto h-auto object-contain rounded-lg shadow-2xl mx-auto"
+                onClick={(e) => e.stopPropagation()}
               />
             </div>
 
@@ -268,7 +371,7 @@ export default function GalleryPage() {
                   e.stopPropagation();
                   showNext();
                 }}
-                className="absolute right-3 sm:right-6 z-10 p-3 rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/20 transition-transform active:scale-95"
+                className="absolute right-3 sm:right-6 z-10 p-3 rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/20 transition-transform active:scale-95 cursor-pointer"
                 title="Next photo (Right arrow)"
               >
                 <ChevronRight className="w-6 h-6" />
@@ -277,7 +380,10 @@ export default function GalleryPage() {
           </div>
 
           {/* Bottom Bar: Thumbnail Strip & Caption */}
-          <div className="p-3 sm:p-4 text-center border-t border-white/10 bg-black/40 shrink-0">
+          <div
+            className="p-3 sm:p-4 text-center border-t border-white/10 bg-black/40 shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
             <p className="text-xs text-gray-400">
               Use <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-white font-mono text-[10px]">&larr;</kbd> and{' '}
               <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-white font-mono text-[10px]">&rarr;</kbd> to navigate,{' '}

@@ -75,7 +75,6 @@ function formatPhotoUrl(rawUrl: string): string {
 function extractPhotoUrls(cellText: string): string[] {
   if (!cellText) return [];
 
-  // Match all potential URLs or split on commas, semicolons, and newlines
   const parts = cellText.split(/[\n,;]+/);
   const urls: string[] = [];
 
@@ -92,12 +91,54 @@ function extractPhotoUrls(cellText: string): string[] {
   return urls;
 }
 
+// Robust date parser supporting YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY, DD-MM-YYYY, and textual dates
+function parseDate(dateStr: string): Date | null {
+  if (!dateStr) return null;
+  const trimmed = dateStr.trim();
+  if (!trimmed) return null;
+
+  // ISO format: YYYY-MM-DD
+  if (/^\d{4}-\d{1,2}-\d{1,2}/.test(trimmed)) {
+    const parts = trimmed.split(/[-T ]/);
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    const d = parseInt(parts[2], 10);
+    return new Date(y, m - 1, d);
+  }
+
+  // Slashed or dashed: DD/MM/YYYY or MM/DD/YYYY or DD-MM-YYYY
+  const slashParts = trimmed.split(/[/.-]/);
+  if (slashParts.length === 3) {
+    const p0 = parseInt(slashParts[0], 10);
+    const p1 = parseInt(slashParts[1], 10);
+    let y = parseInt(slashParts[2], 10);
+    if (y < 100) y += 2000;
+
+    // DD/MM/YYYY (e.g. 19/11/2026)
+    if (p0 > 12 && p1 <= 12) {
+      return new Date(y, p1 - 1, p0);
+    }
+    // MM/DD/YYYY (e.g. 11/19/2026)
+    if (p1 > 12 && p0 <= 12) {
+      return new Date(y, p0 - 1, p1);
+    }
+    // Ambiguous (e.g. 05/11/2026) -> default to DD/MM/YYYY for Indian locale
+    if (p0 <= 31 && p1 <= 12) {
+      return new Date(y, p1 - 1, p0);
+    }
+  }
+
+  const direct = new Date(trimmed);
+  if (!isNaN(direct.getTime())) return direct;
+  return null;
+}
+
 // Google Photos style date formatter: e.g. "Wed, Nov 25, 2026"
 function formatDisplayDate(dateStr: string): string {
   if (!dateStr) return 'Recent Moments';
-  const d = new Date(dateStr);
-  if (!isNaN(d.getTime())) {
-    return d.toLocaleDateString('en-US', {
+  const parsed = parseDate(dateStr);
+  if (parsed) {
+    return parsed.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
@@ -151,31 +192,89 @@ function parseCSV(text: string): string[][] {
   return rows;
 }
 
+// 1. Strict Event Name index finder (never mistakes Event Date, Photos, or Timestamp)
+function findEventNameIndex(headers: string[]): number {
+  let idx = headers.findIndex((h) =>
+    h === 'event name' ||
+    h === 'name of the event' ||
+    h === 'name of event' ||
+    h === 'event title' ||
+    h === 'title of event' ||
+    (h.includes('event') && (h.includes('name') || h.includes('title')))
+  );
+  if (idx !== -1) return idx;
+
+  idx = headers.findIndex((h) =>
+    (h === 'event' || h === 'title' || h === 'occasion' || h.includes('occasion') || (h.includes('event') && !h.includes('date') && !h.includes('time') && !h.includes('photo') && !h.includes('image') && !h.includes('file') && !h.includes('upload'))) &&
+    !h.includes('timestamp') &&
+    !h.includes('date') &&
+    !h.includes('time') &&
+    !h.includes('photo') &&
+    !h.includes('image') &&
+    !h.includes('pic') &&
+    !h.includes('file') &&
+    !h.includes('upload')
+  );
+  if (idx !== -1) return idx;
+
+  idx = headers.findIndex((h) =>
+    (h.includes('name') || h.includes('title')) &&
+    !h.includes('timestamp') &&
+    !h.includes('date') &&
+    !h.includes('member') &&
+    !h.includes('user') &&
+    !h.includes('photo') &&
+    !h.includes('file')
+  );
+  return idx;
+}
+
+// 2. Strict Date index finder from the form questions (EXPLICITLY NEVER the Timestamp column)
+function findDateIndex(headers: string[]): number {
+  let idx = headers.findIndex((h) =>
+    (h === 'event date' ||
+     h === 'date of event' ||
+     h === 'date of the event' ||
+     (h.includes('date') && h.includes('event'))) &&
+    !h.includes('timestamp')
+  );
+  if (idx !== -1) return idx;
+
+  idx = headers.findIndex((h) =>
+    (h === 'date' || h === 'day' || (h.includes('date') && !h.includes('birth') && !h.includes('update'))) &&
+    !h.includes('timestamp') &&
+    !h.includes('time')
+  );
+  if (idx !== -1) return idx;
+
+  idx = headers.findIndex((h) =>
+    (h.includes('when') || h.includes('day')) &&
+    !h.includes('timestamp') &&
+    !h.includes('time')
+  );
+  return idx;
+}
+
+// 3. Strict Photo column index finder
+function findPhotoIndex(headers: string[]): number {
+  return headers.findIndex((h) =>
+    h.includes('photo') ||
+    h.includes('image') ||
+    h.includes('pic') ||
+    h.includes('upload') ||
+    h.includes('file')
+  );
+}
+
 function parseGalleryCsv(text: string): GalleryGroup[] {
   const rows = parseCSV(text);
   if (rows.length <= 1) return [];
 
   const headers = rows[0].map((h) => h.trim().toLowerCase());
 
-  const nameIdx = headers.findIndex(
-    (h) =>
-      h === 'event name' ||
-      h.includes('event') ||
-      h.includes('title') ||
-      h === 'name' ||
-      h.includes('occasion')
-  );
-  const dateIdx = headers.findIndex(
-    (h) => h === 'date' || (h.includes('date') && !h.includes('timestamp'))
-  );
-  const photoIdx = headers.findIndex(
-    (h) =>
-      h.includes('photo') ||
-      h.includes('image') ||
-      h.includes('pic') ||
-      h.includes('upload') ||
-      h.includes('file')
-  );
+  const nameIdx = findEventNameIndex(headers);
+  const dateIdx = findDateIndex(headers);
+  const photoIdx = findPhotoIndex(headers);
 
   const groupMap = new Map<string, GalleryGroup>();
 
@@ -183,26 +282,35 @@ function parseGalleryCsv(text: string): GalleryGroup[] {
     const r = rows[i];
     if (r.length < 2) continue;
 
+    // Pull Event Name
     const eventName =
       nameIdx >= 0 && nameIdx < r.length && r[nameIdx].trim()
         ? r[nameIdx].trim()
-        : 'Community Gathering';
+        : 'Chattada Sri Vaishnava Sangham Gathering';
+
+    // Strictly pull Date from the form column, NEVER from the timestamp column
     const rawDate =
       dateIdx >= 0 && dateIdx < r.length && r[dateIdx].trim()
         ? r[dateIdx].trim()
         : '';
-    const rawPhotos =
-      photoIdx >= 0 && photoIdx < r.length ? r[photoIdx] : '';
+
+    const parsedDate = parseDate(rawDate);
+    const displayDate = parsedDate ? formatDisplayDate(rawDate) : (rawDate || 'Recent Moments');
+    const normalizedDate = parsedDate ? parsedDate.toISOString().split('T')[0] : (rawDate || 'undated');
 
     // Collect all comma-separated photos in the cell and any trailing URL fields
+    const rawPhotos = photoIdx >= 0 && photoIdx < r.length ? r[photoIdx] : '';
     let combinedPhotos = rawPhotos;
-    for (let c = photoIdx + 1; c < r.length; c++) {
+
+    for (let c = 0; c < r.length; c++) {
+      if (c === nameIdx || c === dateIdx || c === photoIdx) continue;
+      const cell = r[c] || '';
       if (
-        r[c].includes('http://') ||
-        r[c].includes('https://') ||
-        r[c].includes('drive.google.com')
+        cell.includes('http://') ||
+        cell.includes('https://') ||
+        cell.includes('drive.google.com')
       ) {
-        combinedPhotos += ', ' + r[c];
+        combinedPhotos += ', ' + cell;
       }
     }
 
@@ -210,15 +318,14 @@ function parseGalleryCsv(text: string): GalleryGroup[] {
     if (photoUrls.length === 0) continue;
 
     // Group key based on Date + Event Name so multiple batches on the same date merge together
-    const normalizedDate = rawDate || 'Undated';
-    const groupKey = `${normalizedDate}___${eventName}`;
+    const groupKey = `${normalizedDate}___${eventName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
 
     if (!groupMap.has(groupKey)) {
       groupMap.set(groupKey, {
         groupKey,
         eventName,
         date: normalizedDate,
-        displayDate: formatDisplayDate(normalizedDate),
+        displayDate,
         photos: [],
         total: 0,
       });
@@ -230,7 +337,7 @@ function parseGalleryCsv(text: string): GalleryGroup[] {
         id: `g_${i}_${pIdx}`,
         url,
         eventName,
-        date: group.displayDate,
+        date: displayDate,
         rawDate: normalizedDate,
       });
     });
@@ -239,10 +346,10 @@ function parseGalleryCsv(text: string): GalleryGroup[] {
 
   const groups = Array.from(groupMap.values());
 
-  // Sort groups newest first
+  // Sort groups newest first based on parsed date timestamp
   groups.sort((a, b) => {
-    const timeA = new Date(a.date).getTime() || 0;
-    const timeB = new Date(b.date).getTime() || 0;
+    const timeA = parseDate(a.date)?.getTime() || 0;
+    const timeB = parseDate(b.date)?.getTime() || 0;
     return timeB - timeA;
   });
 
