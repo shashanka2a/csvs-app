@@ -245,7 +245,7 @@ export default function EventsPage() {
           </p>
           <span className="inline-flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full font-medium border border-emerald-200">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Connected to Events Sheet</span>
+            <span>Connected</span>
           </span>
         </div>
 

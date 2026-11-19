@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import {
   RefreshCw,
-  CheckCircle2,
   X,
   ChevronLeft,
   ChevronRight,
@@ -136,12 +135,8 @@ export default function GalleryPage() {
               </p>
             </div>
 
-            {/* Quick stats & sync */}
+            {/* Sync Sheet button */}
             <div className="flex items-center gap-3">
-              <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-950/60 px-3 py-1.5 rounded-full font-medium border border-emerald-800">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>{totalPhotos} Photos</span>
-              </span>
               <button
                 type="button"
                 onClick={fetchGallery}
