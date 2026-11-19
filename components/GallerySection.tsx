@@ -10,9 +10,31 @@ export default function GallerySection() {
   const [photos, setPhotos] = useState<GalleryPhoto[]>(DEFAULT_PHOTOS);
 
   useEffect(() => {
+    fetch('/api/gallery')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.groups) && data.groups.length > 0) {
+          const flatPhotos: GalleryPhoto[] = [];
+          data.groups.forEach((g: any) => {
+            if (Array.isArray(g.photos)) {
+              g.photos.forEach((p: any) => {
+                flatPhotos.push({
+                  id: flatPhotos.length + 1,
+                  url: p.url,
+                  order: flatPhotos.length + 1,
+                });
+              });
+            }
+          });
+          if (flatPhotos.length > 0) {
+            setPhotos(flatPhotos);
+          }
+        }
+      })
+      .catch(() => {});
+
     if (typeof window !== 'undefined') {
       const loadPhotos = () => setPhotos(getStoredPhotos());
-      loadPhotos();
       window.addEventListener('csvs_photos_updated', loadPhotos);
       return () => window.removeEventListener('csvs_photos_updated', loadPhotos);
     }
@@ -46,6 +68,7 @@ export default function GallerySection() {
               src={p1.url}
               alt="Community Photo 1"
               fill
+              unoptimized
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
@@ -59,6 +82,7 @@ export default function GallerySection() {
                 src={p2.url}
                 alt="Community Photo 2"
                 fill
+                unoptimized
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
@@ -70,6 +94,7 @@ export default function GallerySection() {
                 src={p3.url}
                 alt="Community Photo 3"
                 fill
+                unoptimized
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
