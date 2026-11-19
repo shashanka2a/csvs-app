@@ -409,9 +409,6 @@ export default function GalleryPage() {
                   {/* Header: Title and Date inline in the same size */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
                     <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xl sm:text-2xl font-serif">
-                      <span className="bg-brand-red/10 text-brand-red text-xs uppercase font-bold tracking-wider px-2 py-0.5 rounded font-sans">
-                        Event Album
-                      </span>
                       <h3 className="font-bold text-brand-dark tracking-tight">
                         {group.eventName}
                       </h3>
@@ -518,9 +515,6 @@ export default function GalleryPage() {
                   {/* Header: Title and Date inline in the same size */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
                     <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xl sm:text-2xl font-serif">
-                      <span className="bg-amber-100 text-amber-800 text-xs uppercase font-bold tracking-wider px-2 py-0.5 rounded font-sans">
-                        Video Album
-                      </span>
                       <h3 className="font-bold text-brand-dark tracking-tight">
                         {group.eventName}
                       </h3>
