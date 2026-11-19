@@ -43,6 +43,7 @@ export default function GalleryPage() {
   const [activeVideo, setActiveVideo] = useState<VideoItem | null>(null);
   const [activeGroupVideos, setActiveGroupVideos] = useState<VideoItem[]>([]);
   const [currentVideoIndex, setCurrentVideoIndex] = useState<number>(0);
+  const [videoLoadError, setVideoLoadError] = useState<boolean>(false);
 
   // Touch swipe support for mobile photo lightbox
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -106,10 +107,12 @@ export default function GalleryPage() {
     setActiveGroupVideos(gVideos);
     setCurrentVideoIndex(idx >= 0 ? idx : 0);
     setActiveVideo(video);
+    setVideoLoadError(false);
   };
 
   const closeVideoModal = () => {
     setActiveVideo(null);
+    setVideoLoadError(false);
   };
 
   const showNextVideo = useCallback(() => {
@@ -117,6 +120,7 @@ export default function GalleryPage() {
     const nextIdx = (currentVideoIndex + 1) % activeGroupVideos.length;
     setCurrentVideoIndex(nextIdx);
     setActiveVideo(activeGroupVideos[nextIdx]);
+    setVideoLoadError(false);
   }, [currentVideoIndex, activeGroupVideos]);
 
   const showPrevVideo = useCallback(() => {
@@ -124,6 +128,7 @@ export default function GalleryPage() {
     const prevIdx = (currentVideoIndex - 1 + activeGroupVideos.length) % activeGroupVideos.length;
     setCurrentVideoIndex(prevIdx);
     setActiveVideo(activeGroupVideos[prevIdx]);
+    setVideoLoadError(false);
   }, [currentVideoIndex, activeGroupVideos]);
 
   // Swipe gesture handling for mobile photos
@@ -809,14 +814,38 @@ export default function GalleryPage() {
                   allowFullScreen
                   className="w-full h-full border-0"
                 />
+              ) : videoLoadError ? (
+                /* Fallback if mobile browser blocks direct MP4 stream */
+                <div className="flex flex-col items-center justify-center p-6 text-center text-white bg-slate-950 w-full h-full space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-brand-red/20 text-brand-red flex items-center justify-center">
+                    <Video className="w-6 h-6" />
+                  </div>
+                  <p className="font-serif font-bold text-base sm:text-lg">
+                    {activeVideo.eventName}
+                  </p>
+                  <p className="text-xs text-gray-300 max-w-md">
+                    Tap below to open and watch this video directly in high definition.
+                  </p>
+                  <a
+                    href={activeVideo.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-red hover:bg-brand-redhover text-white text-xs font-bold rounded-lg shadow-md transition-all active:scale-95 cursor-pointer"
+                  >
+                    <Play className="w-4 h-4 fill-white" />
+                    <span>Watch in Google Drive</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
               ) : (
                 <video
                   key={activeVideo.id}
                   src={activeVideo.streamUrl || activeVideo.embedUrl}
+                  poster={activeVideo.thumbnailUrl}
                   controls
-                  autoPlay
                   playsInline
-                  preload="auto"
+                  preload="metadata"
+                  onError={() => setVideoLoadError(true)}
                   className="w-full h-full object-contain bg-black"
                 >
                   <source

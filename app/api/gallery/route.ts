@@ -100,6 +100,7 @@ function extractPhotoUrls(cellText: string): string[] {
 function parseVideoUrl(rawUrl: string): {
   url: string;
   embedUrl: string;
+  streamUrl?: string;
   thumbnailUrl: string;
   platform: 'youtube' | 'drive' | 'vimeo' | 'direct';
 } | null {
