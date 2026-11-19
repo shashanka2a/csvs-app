@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { User, Search, RefreshCw, Briefcase, CheckCircle2, ChevronDown } from 'lucide-react';
 import type { CommunityMember } from '@/app/api/members/route';
 
@@ -69,6 +70,32 @@ function getInitials(name: string) {
     .slice(0, 2)
     .join('')
     .toUpperCase();
+}
+
+function MemberAvatar({ member }: { member: CommunityMember }) {
+  const [imgError, setImgError] = useState(false);
+
+  if (member.photo && !imgError) {
+    return (
+      <div className="relative w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden border-2 border-brand-red/30 bg-slate-100 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+        <Image
+          src={member.photo}
+          alt={member.fullName}
+          fill
+          unoptimized
+          className="object-cover"
+          sizes="80px"
+          onError={() => setImgError(true)}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden border-2 border-brand-red/20 bg-brand-red/10 flex items-center justify-center shadow-xs text-brand-red font-serif font-bold text-xl group-hover:scale-105 transition-transform">
+      {getInitials(member.fullName) || <User className="text-brand-muted w-8 h-8" />}
+    </div>
+  );
 }
 
 export default function MembersPage() {
@@ -216,10 +243,8 @@ export default function MembersPage() {
                 )}
 
                 <div>
-                  {/* Avatar Initials */}
-                  <div className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden border-2 border-brand-red/20 bg-brand-red/10 flex items-center justify-center shadow-xs text-brand-red font-serif font-bold text-xl group-hover:scale-105 transition-transform">
-                    {getInitials(member.fullName) || <User className="text-brand-muted w-8 h-8" />}
-                  </div>
+                  {/* Member DP / Photo or Initials Avatar */}
+                  <MemberAvatar member={member} />
 
                   {/* Full Name: Surname + Name */}
                   <h3 className="font-serif font-bold text-brand-dark text-lg mb-1 leading-snug">

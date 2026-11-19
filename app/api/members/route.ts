@@ -8,6 +8,28 @@ export interface CommunityMember {
   district: string;
   occupation: string;
   membershipId?: string;
+  photo?: string;
+}
+
+// Convert Google Drive sharing links or raw URLs into direct web image links
+export function formatPhotoUrl(rawUrl: string): string {
+  if (!rawUrl) return '';
+  const trimmed = rawUrl.trim();
+  if (!trimmed) return '';
+
+  // Google Drive standard share link: https://drive.google.com/file/d/FILE_ID/view...
+  const driveFileMatch = trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (driveFileMatch && driveFileMatch[1]) {
+    return `https://lh3.googleusercontent.com/d/${driveFileMatch[1]}`;
+  }
+
+  // Google Drive open?id= or uc?id=
+  const driveIdMatch = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if ((trimmed.includes('drive.google.com') || trimmed.includes('docs.google.com')) && driveIdMatch && driveIdMatch[1]) {
+    return `https://lh3.googleusercontent.com/d/${driveIdMatch[1]}`;
+  }
+
+  return trimmed;
 }
 
 const GOOGLE_SHEET_CSV_URL =
@@ -106,6 +128,9 @@ function parseCsv(text: string): CommunityMember[] {
   const surnameIdx = headers.indexOf('surname');
   const districtIdx = headers.findIndex((h) => h === 'district/mandal' || h.startsWith('district'));
   const occupationIdx = headers.indexOf('occupation');
+  const photoIdx = headers.findIndex(
+    (h) => h === 'photo' || h.includes('photo') || h.includes('dp') || h.includes('image') || h.includes('picture')
+  );
   const membershipIdx = headers.findIndex(
     (h) => h.includes('membership') || h === 'id' || h.includes('member id') || h === 's.no' || h === 'sl.no'
   );
@@ -129,6 +154,8 @@ function parseCsv(text: string): CommunityMember[] {
       : 'Nizamabad';
     const occupation = occupationIdx >= 0 && occupationIdx < values.length ? values[occupationIdx].trim() : '';
     const membershipId = membershipIdx >= 0 && membershipIdx < values.length ? values[membershipIdx].trim() : String(i);
+    const rawPhoto = photoIdx >= 0 && photoIdx < values.length ? values[photoIdx].trim() : '';
+    const photo = formatPhotoUrl(rawPhoto);
 
     members.push({
       id: String(i),
@@ -138,6 +165,7 @@ function parseCsv(text: string): CommunityMember[] {
       district,
       occupation,
       membershipId,
+      photo: photo || undefined,
     });
   }
 
