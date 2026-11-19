@@ -12,7 +12,7 @@ export interface CommunityMember {
 }
 
 // Convert Google Drive sharing links or raw URLs into direct web image links
-export function formatPhotoUrl(rawUrl: string): string {
+function formatPhotoUrl(rawUrl: string): string {
   if (!rawUrl) return '';
   const trimmed = rawUrl.trim();
   if (!trimmed) return '';
