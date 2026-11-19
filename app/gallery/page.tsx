@@ -11,10 +11,8 @@ import {
   ExternalLink,
   Calendar,
   Images,
-  AlertCircle,
   Search,
   Maximize2,
-  Sparkles,
 } from 'lucide-react';
 import type { GalleryGroup, GalleryItem } from '@/app/api/gallery/route';
 
@@ -22,7 +20,6 @@ export default function GalleryPage() {
   const [groups, setGroups] = useState<GalleryGroup[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
-  const [isUnauthorized, setIsUnauthorized] = useState<boolean>(false);
   const [totalPhotos, setTotalPhotos] = useState<number>(0);
 
   // Lightbox Modal state
@@ -39,7 +36,6 @@ export default function GalleryPage() {
         if (Array.isArray(data.groups) && data.groups.length > 0) {
           setGroups(data.groups);
           setTotalPhotos(data.total || 0);
-          setIsUnauthorized(Boolean(data.isUnauthorized));
         }
       }
     } catch (e) {
@@ -160,19 +156,6 @@ export default function GalleryPage() {
           </div>
         </div>
       </section>
-
-      {/* Permissions hint alert if sheet is restricted */}
-      {isUnauthorized && (
-        <div className="bg-amber-50 border-b border-amber-200 py-3 px-4 text-xs text-amber-800">
-          <div className="container mx-auto flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>
-              <strong>Note for Admin:</strong> Your Gallery Google Sheet is currently set to &ldquo;Restricted&rdquo;.
-              In Google Sheets, click <strong>Share</strong> &rarr; change General Access to <strong>&ldquo;Anyone with the link can view&rdquo;</strong> to automatically load live batches. Showing default moments in the meantime.
-            </span>
-          </div>
-        </div>
-      )}
 
       {/* Search & Filter Bar */}
       <div className="bg-white border-b border-brand-border sticky top-16 z-30 shadow-xs py-3.5">

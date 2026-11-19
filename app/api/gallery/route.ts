@@ -21,32 +21,8 @@ const GOOGLE_SHEET_GALLERY_CSV_URL =
   process.env.GOOGLE_SHEET_GALLERY_CSV_URL ||
   'https://docs.google.com/spreadsheets/d/1mO7L6B9JewS4CitYcK3wTD-HhMBww76oeCb-3iQJr1g/export?format=csv&gid=1532582308';
 
-const DEFAULT_GALLERY_PHOTOS = [
-  { id: 1, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/1.jpg' },
-  { id: 2, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/2.jpg' },
-  { id: 3, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/3.jpg' },
-  { id: 4, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/4.jpg' },
-  { id: 5, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/5.jpg' },
-  { id: 6, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/6.jpg' },
-  { id: 7, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/7.jpg' },
-];
-
-const FALLBACK_GROUPS: GalleryGroup[] = [
-  {
-    groupKey: 'default_community_moments',
-    eventName: 'Chattada Sri Vaishnava Sangham Moments',
-    date: '2026-11-19',
-    displayDate: 'November 2026',
-    total: DEFAULT_GALLERY_PHOTOS.length,
-    photos: DEFAULT_GALLERY_PHOTOS.map((p, idx) => ({
-      id: `fallback_${p.id || idx + 1}`,
-      url: p.url,
-      eventName: 'Chattada Sri Vaishnava Sangham Moments',
-      date: 'November 2026',
-      rawDate: '2026-11-19',
-    })),
-  },
-];
+const GOOGLE_SHEET_GALLERY_GVIZ_URL =
+  'https://docs.google.com/spreadsheets/d/1mO7L6B9JewS4CitYcK3wTD-HhMBww76oeCb-3iQJr1g/gviz/tq?tqx=out:csv&gid=1532582308';
 
 // Convert Google Drive sharing links or raw URLs into direct web image links
 function formatPhotoUrl(rawUrl: string): string {
@@ -71,18 +47,20 @@ function formatPhotoUrl(rawUrl: string): string {
   return trimmed;
 }
 
-// Split multiple comma-separated, semicolon-separated, or newline-separated photo URLs from a cell
+// Split multiple comma-separated, semicolon-separated, or newline-separated photo URLs from the Photos column
 function extractPhotoUrls(cellText: string): string[] {
   if (!cellText) return [];
 
-  const parts = cellText.split(/[\n,;]+/);
+  // Match all URLs cleanly using regex
+  const regex = /https?:\/\/[^\s,;"<>]+/g;
+  const matches = cellText.match(regex);
   const urls: string[] = [];
 
-  for (let part of parts) {
-    part = part.replace(/^["'\s]+|["'\s]+$/g, '').trim();
-    if (part.startsWith('http://') || part.startsWith('https://')) {
-      const formatted = formatPhotoUrl(part);
-      if (formatted) {
+  if (matches && matches.length > 0) {
+    for (let m of matches) {
+      const clean = m.replace(/^["'\s]+|["'\s,;]+$/g, '').trim();
+      const formatted = formatPhotoUrl(clean);
+      if (formatted && !urls.includes(formatted)) {
         urls.push(formatted);
       }
     }
@@ -192,7 +170,7 @@ function parseCSV(text: string): string[][] {
   return rows;
 }
 
-// 1. Strict Event Name index finder (never mistakes Event Date, Photos, or Timestamp)
+// 1. Strict Event Name index finder (matches Column B 'Event Name')
 function findEventNameIndex(headers: string[]): number {
   let idx = headers.findIndex((h) =>
     h === 'event name' ||
@@ -229,7 +207,7 @@ function findEventNameIndex(headers: string[]): number {
   return idx;
 }
 
-// 2. Strict Date index finder from the form questions (EXPLICITLY NEVER the Timestamp column)
+// 2. Strict Date index finder (matches Column C 'Date', NEVER 'Timestamp')
 function findDateIndex(headers: string[]): number {
   let idx = headers.findIndex((h) =>
     (h === 'event date' ||
@@ -255,7 +233,7 @@ function findDateIndex(headers: string[]): number {
   return idx;
 }
 
-// 3. Strict Photo column index finder
+// 3. Strict Photo column index finder (matches Column D 'Photos')
 function findPhotoIndex(headers: string[]): number {
   return headers.findIndex((h) =>
     h.includes('photo') ||
@@ -282,11 +260,11 @@ function parseGalleryCsv(text: string): GalleryGroup[] {
     const r = rows[i];
     if (r.length < 2) continue;
 
-    // Pull Event Name
+    // Pull Event Name from sheet
     const eventName =
       nameIdx >= 0 && nameIdx < r.length && r[nameIdx].trim()
         ? r[nameIdx].trim()
-        : 'Chattada Sri Vaishnava Sangham Gathering';
+        : 'Community Gathering';
 
     // Strictly pull Date from the form column, NEVER from the timestamp column
     const rawDate =
@@ -298,7 +276,7 @@ function parseGalleryCsv(text: string): GalleryGroup[] {
     const displayDate = parsedDate ? formatDisplayDate(rawDate) : (rawDate || 'Recent Moments');
     const normalizedDate = parsedDate ? parsedDate.toISOString().split('T')[0] : (rawDate || 'undated');
 
-    // Collect all comma-separated photos in the cell and any trailing URL fields
+    // Collect all photos from the Photos column in CSV
     const rawPhotos = photoIdx >= 0 && photoIdx < r.length ? r[photoIdx] : '';
     let combinedPhotos = rawPhotos;
 
@@ -317,7 +295,7 @@ function parseGalleryCsv(text: string): GalleryGroup[] {
     const photoUrls = extractPhotoUrls(combinedPhotos);
     if (photoUrls.length === 0) continue;
 
-    // Group key based on Date + Event Name so multiple batches on the same date merge together
+    // Group key based on Date + Event Name so multiple batches merge under one event
     const groupKey = `${normalizedDate}___${eventName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
 
     if (!groupMap.has(groupKey)) {
@@ -358,6 +336,8 @@ function parseGalleryCsv(text: string): GalleryGroup[] {
 
 export async function GET() {
   try {
+    // 1. Try primary Google Sheet CSV export
+    let csvText = '';
     const res = await fetch(GOOGLE_SHEET_GALLERY_CSV_URL, {
       cache: 'no-store',
       redirect: 'follow',
@@ -366,35 +346,44 @@ export async function GET() {
       },
     });
 
-    if (!res.ok) {
-      console.warn(`[Gallery API] Google Sheet status ${res.status}. Using fallback.`);
-      return NextResponse.json({
-        groups: FALLBACK_GROUPS,
-        total: DEFAULT_GALLERY_PHOTOS.length,
-        source: 'fallback',
-        isUnauthorized: res.status === 401,
-      });
+    if (res.ok) {
+      const text = await res.text();
+      if (text && !text.includes('<!DOCTYPE') && !text.includes('<html')) {
+        csvText = text;
+      }
     }
 
-    const csvText = await res.text();
-    if (!csvText || csvText.includes('<!DOCTYPE') || csvText.includes('<html')) {
+    // 2. Fallback to Google Visualization API if primary export was HTML or failed
+    if (!csvText) {
+      try {
+        const gvizRes = await fetch(GOOGLE_SHEET_GALLERY_GVIZ_URL, {
+          cache: 'no-store',
+          redirect: 'follow',
+          headers: {
+            'User-Agent': 'CSVS-NextApp/1.0',
+          },
+        });
+        if (gvizRes.ok) {
+          const text = await gvizRes.text();
+          if (text && !text.includes('<!DOCTYPE') && !text.includes('<html')) {
+            csvText = text;
+          }
+        }
+      } catch (e) {
+        console.warn('[Gallery API] GViz fetch fallback error:', e);
+      }
+    }
+
+    // If no CSV text could be retrieved (e.g. if sheet sharing is not yet set to Anyone with the link)
+    if (!csvText) {
       return NextResponse.json({
-        groups: FALLBACK_GROUPS,
-        total: DEFAULT_GALLERY_PHOTOS.length,
-        source: 'fallback',
+        groups: [],
+        total: 0,
+        source: 'google-sheet',
       });
     }
 
     const groups = parseGalleryCsv(csvText);
-
-    if (groups.length === 0) {
-      return NextResponse.json({
-        groups: FALLBACK_GROUPS,
-        total: DEFAULT_GALLERY_PHOTOS.length,
-        source: 'fallback',
-      });
-    }
-
     const totalPhotos = groups.reduce((acc, g) => acc + g.total, 0);
 
     return NextResponse.json({
@@ -405,9 +394,9 @@ export async function GET() {
   } catch (error) {
     console.warn('[Gallery API] Error:', error);
     return NextResponse.json({
-      groups: FALLBACK_GROUPS,
-      total: DEFAULT_GALLERY_PHOTOS.length,
-      source: 'fallback',
+      groups: [],
+      total: 0,
+      source: 'google-sheet',
     });
   }
 }
