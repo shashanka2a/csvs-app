@@ -96,7 +96,7 @@ function extractPhotoUrls(cellText: string): string[] {
 }
 
 // Parse and format video URLs (YouTube, Google Drive, Vimeo, direct)
-export function parseVideoUrl(rawUrl: string): {
+function parseVideoUrl(rawUrl: string): {
   url: string;
   embedUrl: string;
   thumbnailUrl: string;
