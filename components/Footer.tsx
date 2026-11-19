@@ -11,14 +11,8 @@ const quickLinks = [
   { label: 'Members', href: '/members' },
   { label: 'Events', href: '/events' },
   { label: 'Gallery', href: '/gallery' },
+  { label: 'Matrimony', href: '/matrimony' },
   { label: 'Contact Us', href: '#contact' },
-];
-
-const communityLinks = [
-  { label: 'About Sangham', href: '/members' },
-  { label: 'Area Representatives', href: '/members' },
-  { label: 'Nizamabad', href: '/members' },
-  { label: 'Armoor & Bodhan', href: '/members' },
 ];
 
 export default function Footer() {
@@ -36,10 +30,10 @@ export default function Footer() {
   return (
     <footer id="contact" className="bg-brand-dark border-t-4 border-brand-red pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* 4-column grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+        {/* 3-column grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 sm:gap-12 mb-12">
           {/* Column 1: Brand */}
-          <div>
+          <div className="md:pr-4">
             <div className="flex items-center gap-3 mb-3">
               <Logo className="w-10 h-10 rounded-md shrink-0 shadow" />
               <div className="flex flex-col">
@@ -50,7 +44,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed mb-5">
-              Preserving tradition, fostering community, and celebrating heritage across generations.
+              Preserving tradition, fostering community, and celebrating sacred heritage across generations.
             </p>
             {/* Social Icons */}
             <div className="flex items-center gap-3">
@@ -79,11 +73,11 @@ export default function Footer() {
           </div>
 
           {/* Column 2: Quick Links */}
-          <div>
+          <div className="md:pl-6">
             <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">
               Quick Links
             </h4>
-            <ul className="space-y-2">
+            <ul className="space-y-2.5">
               {quickLinks.map((link) => (
                 <li key={link.label}>
                   <Link
@@ -97,26 +91,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Column 3: Community */}
-          <div>
-            <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">
-              Community
-            </h4>
-            <ul className="space-y-2">
-              {communityLinks.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    className="text-gray-400 hover:text-brand-gold text-sm transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 4: Contact Us */}
+          {/* Column 3: Contact Us */}
           <div>
             <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">
               Contact Us
