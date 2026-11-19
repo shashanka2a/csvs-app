@@ -53,14 +53,14 @@ export default function GallerySection() {
     <section id="gallery" className="py-20 bg-slate-50 border-t border-brand-border/60">
       <div className="container mx-auto px-4 lg:px-8">
         {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-brand-gold text-sm font-bold tracking-widest uppercase mb-2 block">
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <span className="text-brand-gold text-xs sm:text-sm font-bold tracking-widest uppercase mb-2 block">
             Moments &amp; Memories
           </span>
-          <h2 className="text-3xl md:text-5xl font-serif text-brand-dark font-bold mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif text-brand-dark font-bold mb-3">
             Community Gallery
           </h2>
-          <p className="text-brand-muted text-base md:text-lg">
+          <p className="text-brand-muted text-sm sm:text-base">
             Special moments, celebrations, and gatherings from our Sangham. Click any photo to view full size.
           </p>
         </div>

@@ -178,7 +178,7 @@ export default function EventsPage() {
           <span className="text-brand-gold text-xs font-bold tracking-widest uppercase mb-2 block">
             Sangham Gatherings & Celebrations
           </span>
-          <h1 className="font-serif text-4xl md:text-5xl font-bold mb-3">Community Events</h1>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold mb-2">Community Events</h1>
           <p className="text-gray-300 text-base md:text-lg max-w-2xl leading-relaxed">
             Stay updated with the latest events, celebrations, and gatherings loaded live from our Sangham Sheet.
           </p>

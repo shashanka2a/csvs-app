@@ -51,12 +51,12 @@ export const DEFAULT_PHOTOS: GalleryPhoto[] = [
 
 export const DEFAULT_CONTENT: SiteContent = {
   hero: {
-    badge: 'Welcome to Chattada Sri Vaishnava Sangham',
-    title: 'All About',
-    titleHighlight: 'Our Community',
+    badge: 'Chattada Sri Vaishnava Sangham • Telangana',
+    title: 'Preserving Tradition,',
+    titleHighlight: 'Uniting Families',
     description:
-      'Bringing our community together across Telangana — connecting families, celebrating our heritage, and supporting one another.',
-    ctaText: 'Explore Community',
+      'Bringing our Chattada Sri Vaishnava community together across Telangana — connecting families, celebrating our sacred heritage, and supporting one another.',
+    ctaText: 'Explore Directory',
     ctaLink: '/members',
   },
   contact: {
@@ -153,8 +153,16 @@ export function getStoredContent(): SiteContent {
     if (contact.address === 'Housing Board Colony, Nizamabad, Telangana 503002') {
       contact.address = 'Kanteshwar, Nizamabad, Telangana 503002';
     }
+    const hero = { ...DEFAULT_CONTENT.hero, ...(parsed.hero || {}) };
+    if (hero.title === 'All About') {
+      hero.badge = DEFAULT_CONTENT.hero.badge;
+      hero.title = DEFAULT_CONTENT.hero.title;
+      hero.titleHighlight = DEFAULT_CONTENT.hero.titleHighlight;
+      hero.description = DEFAULT_CONTENT.hero.description;
+      hero.ctaText = DEFAULT_CONTENT.hero.ctaText;
+    }
     return {
-      hero: { ...DEFAULT_CONTENT.hero, ...(parsed.hero || {}) },
+      hero,
       contact,
       events: Array.isArray(parsed.events) && parsed.events.length > 0 ? parsed.events : DEFAULT_CONTENT.events,
     };

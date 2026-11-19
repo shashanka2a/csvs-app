@@ -51,14 +51,14 @@ export default function EventsSection() {
     <section id="events" className="py-20 bg-white border-t border-brand-border/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-brand-gold text-sm font-bold tracking-widest uppercase mb-2 block">
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <span className="text-brand-gold text-xs sm:text-sm font-bold tracking-widest uppercase mb-2 block">
             Upcoming Gatherings
           </span>
-          <h2 className="text-3xl md:text-5xl font-serif text-brand-dark font-bold mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif text-brand-dark font-bold mb-3">
             Community Events
           </h2>
-          <p className="text-brand-muted text-base md:text-lg leading-relaxed">
+          <p className="text-brand-muted text-sm sm:text-base leading-relaxed">
             Join our community get-togethers, family meetings, and festive celebrations
             across Nizamabad, Armoor, and Bodhan.
           </p>

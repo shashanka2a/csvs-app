@@ -18,7 +18,7 @@ export default function MatrimonyPage() {
             <Sparkles className="w-3.5 h-3.5" />
             Launching Soon
           </div>
-          <h1 className="font-serif text-4xl md:text-5xl font-bold mb-3">
+          <h1 className="font-serif text-3xl md:text-4xl font-bold mb-2">
             CSVS Matrimony Portal
           </h1>
           <p className="text-gray-400 text-base md:text-lg max-w-2xl">

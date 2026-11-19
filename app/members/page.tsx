@@ -150,7 +150,7 @@ export default function MembersPage() {
           <span className="text-brand-gold text-xs font-bold tracking-widest uppercase mb-2 block">
             Community Directory
           </span>
-          <h1 className="font-serif text-4xl md:text-5xl font-bold mb-3">
+          <h1 className="font-serif text-3xl md:text-4xl font-bold mb-2">
             Our Community Members
           </h1>
           <p className="text-gray-300 text-base md:text-lg max-w-2xl leading-relaxed">
