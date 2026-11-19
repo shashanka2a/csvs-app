@@ -203,31 +203,22 @@ export default function GalleryPage() {
 
         {filteredGroups.map((group) => (
           <div key={group.groupKey} className="space-y-4">
-            {/* Header: Event Name Badge + Title + Date from form + Photo Count */}
-            <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-3 pb-3 border-b border-gray-200/80">
-              <div className="flex items-start sm:items-center gap-3">
-                <div className="w-3.5 h-3.5 rounded-full bg-brand-red shrink-0 mt-1 sm:mt-0" />
-                <div>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-[10px] font-bold text-brand-red tracking-wider uppercase bg-brand-red/10 px-2 py-0.5 rounded-full inline-block">
-                      Event Album
-                    </span>
-                  </div>
-                  <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-dark tracking-tight">
-                    {group.eventName}
-                  </h2>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-brand-muted pl-6 sm:pl-0">
-                <span className="inline-flex items-center gap-1 font-semibold text-brand-dark bg-brand-cream/80 px-2.5 py-1 rounded-md border border-brand-border/60">
-                  <Calendar className="w-3.5 h-3.5 text-brand-red" />
-                  {group.displayDate}
-                </span>
-                <span>&bull;</span>
-                <span className="font-medium">
-                  {group.total} {group.total === 1 ? 'photo' : 'photos'}
+            {/* Header: Title and Date inline in the same size */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
+              <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xl sm:text-2xl font-serif">
+                <h2 className="font-bold text-brand-dark tracking-tight">
+                  {group.eventName}
+                </h2>
+                <span className="text-gray-300 font-sans select-none">&bull;</span>
+                <span className="font-medium text-brand-red flex items-center gap-1.5">
+                  <Calendar className="w-5 h-5 text-brand-red shrink-0" />
+                  <span>{group.displayDate}</span>
                 </span>
               </div>
+
+              <span className="text-xs font-semibold text-brand-muted bg-slate-100 px-3 py-1 rounded-full border border-brand-border/60 shrink-0 w-fit">
+                {group.total} {group.total === 1 ? 'photo' : 'photos'}
+              </span>
             </div>
 
             {/* Photo Grid with Event Name hover badge */}
@@ -275,27 +266,24 @@ export default function GalleryPage() {
           className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between select-none animate-fade-in"
           onClick={closeLightbox}
         >
-          {/* Top Bar with Event Name Badge */}
+          {/* Top Bar with Title & Date inline */}
           <div
             className="p-4 sm:p-6 flex items-center justify-between text-white border-b border-white/10 shrink-0"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="bg-brand-red text-white text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded shadow-2xs">
-                  Event
-                </span>
-                <span className="font-serif font-bold text-base sm:text-xl text-white truncate max-w-xs sm:max-w-xl">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 text-base sm:text-lg font-serif">
+                <span className="font-bold text-white truncate max-w-xs sm:max-w-xl">
                   {activePhoto.eventName}
                 </span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
-                <span className="text-brand-gold font-medium">{activePhoto.date}</span>
-                <span>&bull;</span>
-                <span>
-                  Photo {currentIndex + 1} of {activeGroupPhotos.length}
+                <span className="text-gray-400 font-sans">&bull;</span>
+                <span className="text-brand-gold font-medium">
+                  {activePhoto.date}
                 </span>
               </div>
+              <span className="text-xs text-gray-400 mt-0.5">
+                Photo {currentIndex + 1} of {activeGroupPhotos.length}
+              </span>
             </div>
 
             <div className="flex items-center gap-2">
