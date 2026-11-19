@@ -77,14 +77,14 @@ function MemberAvatar({ member }: { member: CommunityMember }) {
 
   if (member.photo && !imgError) {
     return (
-      <div className="relative w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden border-2 border-brand-red/30 bg-slate-100 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+      <div className="relative w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden border-2 border-brand-red/30 bg-slate-100 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
         <Image
           src={member.photo}
           alt={member.fullName}
           fill
           unoptimized
-          className="object-cover"
-          sizes="80px"
+          className="object-cover object-top"
+          sizes="96px"
           onError={() => setImgError(true)}
         />
       </div>
@@ -92,8 +92,8 @@ function MemberAvatar({ member }: { member: CommunityMember }) {
   }
 
   return (
-    <div className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden border-2 border-brand-red/20 bg-brand-red/10 flex items-center justify-center shadow-xs text-brand-red font-serif font-bold text-xl group-hover:scale-105 transition-transform">
-      {getInitials(member.fullName) || <User className="text-brand-muted w-8 h-8" />}
+    <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden border-2 border-brand-red/20 bg-brand-red/10 flex items-center justify-center shadow-xs text-brand-red font-serif font-bold text-2xl group-hover:scale-105 transition-transform">
+      {getInitials(member.fullName) || <User className="text-brand-muted w-10 h-10" />}
     </div>
   );
 }
