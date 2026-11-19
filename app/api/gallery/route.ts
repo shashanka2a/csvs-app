@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { DEFAULT_PHOTOS } from '@/lib/contentStore';
 
 export interface GalleryItem {
   id: string;
@@ -22,14 +21,24 @@ const GOOGLE_SHEET_GALLERY_CSV_URL =
   process.env.GOOGLE_SHEET_GALLERY_CSV_URL ||
   'https://docs.google.com/spreadsheets/d/1mO7L6B9JewS4CitYcK3wTD-HhMBww76oeCb-3iQJr1g/export?format=csv&gid=1532582308';
 
+const DEFAULT_GALLERY_PHOTOS = [
+  { id: 1, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/1.jpg' },
+  { id: 2, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/2.jpg' },
+  { id: 3, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/3.jpg' },
+  { id: 4, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/4.jpg' },
+  { id: 5, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/5.jpg' },
+  { id: 6, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/6.jpg' },
+  { id: 7, url: 'https://raw.githubusercontent.com/shashanka2a/csvs-app/refs/heads/main/public/images/7.jpg' },
+];
+
 const FALLBACK_GROUPS: GalleryGroup[] = [
   {
     groupKey: 'default_community_moments',
     eventName: 'Chattada Sri Vaishnava Sangham Moments',
     date: '2026-11-19',
     displayDate: 'November 2026',
-    total: DEFAULT_PHOTOS.length,
-    photos: DEFAULT_PHOTOS.map((p, idx) => ({
+    total: DEFAULT_GALLERY_PHOTOS.length,
+    photos: DEFAULT_GALLERY_PHOTOS.map((p, idx) => ({
       id: `fallback_${p.id || idx + 1}`,
       url: p.url,
       eventName: 'Chattada Sri Vaishnava Sangham Moments',
@@ -60,6 +69,27 @@ function formatPhotoUrl(rawUrl: string): string {
   }
 
   return trimmed;
+}
+
+// Split multiple comma-separated, semicolon-separated, or newline-separated photo URLs from a cell
+function extractPhotoUrls(cellText: string): string[] {
+  if (!cellText) return [];
+
+  // Match all potential URLs or split on commas, semicolons, and newlines
+  const parts = cellText.split(/[\n,;]+/);
+  const urls: string[] = [];
+
+  for (let part of parts) {
+    part = part.replace(/^["'\s]+|["'\s]+$/g, '').trim();
+    if (part.startsWith('http://') || part.startsWith('https://')) {
+      const formatted = formatPhotoUrl(part);
+      if (formatted) {
+        urls.push(formatted);
+      }
+    }
+  }
+
+  return urls;
 }
 
 // Google Photos style date formatter: e.g. "Wed, Nov 25, 2026"
@@ -164,14 +194,19 @@ function parseGalleryCsv(text: string): GalleryGroup[] {
     const rawPhotos =
       photoIdx >= 0 && photoIdx < r.length ? r[photoIdx] : '';
 
-    if (!rawPhotos) continue;
+    // Collect all comma-separated photos in the cell and any trailing URL fields
+    let combinedPhotos = rawPhotos;
+    for (let c = photoIdx + 1; c < r.length; c++) {
+      if (
+        r[c].includes('http://') ||
+        r[c].includes('https://') ||
+        r[c].includes('drive.google.com')
+      ) {
+        combinedPhotos += ', ' + r[c];
+      }
+    }
 
-    // Split multiple photos in a single cell (comma separated from Google Form)
-    const photoUrls = rawPhotos
-      .split(',')
-      .map((u) => formatPhotoUrl(u))
-      .filter(Boolean);
-
+    const photoUrls = extractPhotoUrls(combinedPhotos);
     if (photoUrls.length === 0) continue;
 
     // Group key based on Date + Event Name so multiple batches on the same date merge together
@@ -228,7 +263,7 @@ export async function GET() {
       console.warn(`[Gallery API] Google Sheet status ${res.status}. Using fallback.`);
       return NextResponse.json({
         groups: FALLBACK_GROUPS,
-        total: DEFAULT_PHOTOS.length,
+        total: DEFAULT_GALLERY_PHOTOS.length,
         source: 'fallback',
         isUnauthorized: res.status === 401,
       });
@@ -238,7 +273,7 @@ export async function GET() {
     if (!csvText || csvText.includes('<!DOCTYPE') || csvText.includes('<html')) {
       return NextResponse.json({
         groups: FALLBACK_GROUPS,
-        total: DEFAULT_PHOTOS.length,
+        total: DEFAULT_GALLERY_PHOTOS.length,
         source: 'fallback',
       });
     }
@@ -248,7 +283,7 @@ export async function GET() {
     if (groups.length === 0) {
       return NextResponse.json({
         groups: FALLBACK_GROUPS,
-        total: DEFAULT_PHOTOS.length,
+        total: DEFAULT_GALLERY_PHOTOS.length,
         source: 'fallback',
       });
     }
@@ -264,7 +299,7 @@ export async function GET() {
     console.warn('[Gallery API] Error:', error);
     return NextResponse.json({
       groups: FALLBACK_GROUPS,
-      total: DEFAULT_PHOTOS.length,
+      total: DEFAULT_GALLERY_PHOTOS.length,
       source: 'fallback',
     });
   }
