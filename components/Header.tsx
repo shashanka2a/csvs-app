@@ -36,6 +36,11 @@ export default function Header() {
     return pathname.startsWith(href);
   };
 
+  // Hide public header on Admin Portal to prevent double navbar
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -11,29 +11,59 @@ export default function GallerySection() {
   const [selectedPhoto, setSelectedPhoto] = useState<GalleryPhoto | null>(null);
 
   useEffect(() => {
-    fetch('/api/gallery')
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data.groups) && data.groups.length > 0) {
-          const flatPhotos: GalleryPhoto[] = [];
-          data.groups.forEach((g: any) => {
-            if (Array.isArray(g.photos)) {
-              g.photos.forEach((p: any) => {
-                flatPhotos.push({
-                  id: flatPhotos.length + 1,
+    const loadGalleryPhotos = () => {
+      // First check if custom rearranged photos exist in localStorage
+      if (typeof window !== 'undefined') {
+        const customRaw = localStorage.getItem('csvs_custom_gallery_photos');
+        if (customRaw) {
+          try {
+            const customPhotos = JSON.parse(customRaw);
+            if (Array.isArray(customPhotos) && customPhotos.length > 0) {
+              setPhotos(
+                customPhotos.map((p: any, idx: number) => ({
+                  id: idx + 1,
                   url: p.url,
-                  order: flatPhotos.length + 1,
-                  title: p.eventName || g.eventName,
-                });
-              });
+                  order: idx + 1,
+                  title: p.eventName || 'CSVS Moments',
+                }))
+              );
+              return;
             }
-          });
-          if (flatPhotos.length > 0) {
-            setPhotos(flatPhotos);
+          } catch {
+            // fallback to fetch
           }
         }
-      })
-      .catch(() => {});
+      }
+
+      // Otherwise fetch live from Google Sheets API
+      fetch('/api/gallery')
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data.groups) && data.groups.length > 0) {
+            const flatPhotos: GalleryPhoto[] = [];
+            data.groups.forEach((g: any) => {
+              if (Array.isArray(g.photos)) {
+                g.photos.forEach((p: any) => {
+                  flatPhotos.push({
+                    id: flatPhotos.length + 1,
+                    url: p.url,
+                    order: flatPhotos.length + 1,
+                    title: p.eventName || g.eventName,
+                  });
+                });
+              }
+            });
+            if (flatPhotos.length > 0) {
+              setPhotos(flatPhotos);
+            }
+          }
+        })
+        .catch(() => {});
+    };
+
+    loadGalleryPhotos();
+    window.addEventListener('csvs_gallery_custom_updated', loadGalleryPhotos);
+    return () => window.removeEventListener('csvs_gallery_custom_updated', loadGalleryPhotos);
   }, []);
 
   // Keyboard navigation for Lightbox

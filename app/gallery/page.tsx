@@ -54,14 +54,118 @@ export default function GalleryPage() {
       const res = await fetch('/api/gallery', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data.groups)) {
-          setGroups(data.groups);
-          setTotalPhotos(data.totalPhotos ?? data.total ?? 0);
+        let finalGroups: GalleryGroup[] = Array.isArray(data.groups) ? data.groups : [];
+        let finalVideoGroups: VideoGroup[] = Array.isArray(data.videoGroups) ? data.videoGroups : [];
+
+        // Check if admin saved custom rearranged photos or edited details
+        if (typeof window !== 'undefined') {
+          const customPhotosRaw = localStorage.getItem('csvs_custom_gallery_photos');
+          if (customPhotosRaw) {
+            try {
+              const customPhotos = JSON.parse(customPhotosRaw);
+              if (Array.isArray(customPhotos) && customPhotos.length > 0) {
+                const groupMap = new Map<string, GalleryGroup>();
+                customPhotos.forEach((item: any) => {
+                  const evName = item.eventName || 'CSVS Moments';
+                  const date = item.date || '';
+                  const key = `${evName}___${date}`;
+                  if (!groupMap.has(key)) {
+                    let dispDate = 'Recent Moments';
+                    if (date) {
+                      const d = new Date(date);
+                      dispDate = !isNaN(d.getTime())
+                        ? d.toLocaleDateString('en-US', {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })
+                        : date;
+                    }
+                    groupMap.set(key, {
+                      groupKey: key,
+                      eventName: evName,
+                      date: date,
+                      displayDate: dispDate,
+                      photos: [],
+                      total: 0,
+                    });
+                  }
+                  const g = groupMap.get(key)!;
+                  g.photos.push({
+                    id: item.id,
+                    url: item.url,
+                    eventName: evName,
+                    date: date,
+                    rawDate: item.rawDate || date,
+                  });
+                  g.total = g.photos.length;
+                });
+                finalGroups = Array.from(groupMap.values());
+              }
+            } catch (err) {
+              console.warn('Failed to parse custom photos', err);
+            }
+          }
+
+          const customVideosRaw = localStorage.getItem('csvs_custom_gallery_videos');
+          if (customVideosRaw) {
+            try {
+              const customVideos = JSON.parse(customVideosRaw);
+              if (Array.isArray(customVideos) && customVideos.length > 0) {
+                const vGroupMap = new Map<string, VideoGroup>();
+                customVideos.forEach((item: any) => {
+                  const evName = item.eventName || 'CSVS Videos';
+                  const date = item.date || '';
+                  const key = `${evName}___${date}`;
+                  if (!vGroupMap.has(key)) {
+                    let dispDate = 'Recent Videos';
+                    if (date) {
+                      const d = new Date(date);
+                      dispDate = !isNaN(d.getTime())
+                        ? d.toLocaleDateString('en-US', {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })
+                        : date;
+                    }
+                    vGroupMap.set(key, {
+                      groupKey: key,
+                      eventName: evName,
+                      date: date,
+                      displayDate: dispDate,
+                      videos: [],
+                      total: 0,
+                    });
+                  }
+                  const g = vGroupMap.get(key)!;
+                  g.videos.push({
+                    id: item.id,
+                    url: item.url,
+                    embedUrl: item.embedUrl,
+                    streamUrl: item.streamUrl,
+                    thumbnailUrl: item.thumbnailUrl,
+                    platform: item.platform,
+                    eventName: evName,
+                    date: date,
+                    rawDate: item.rawDate || date,
+                  });
+                  g.total = g.videos.length;
+                });
+                finalVideoGroups = Array.from(vGroupMap.values());
+              }
+            } catch (err) {
+              console.warn('Failed to parse custom videos', err);
+            }
+          }
         }
-        if (Array.isArray(data.videoGroups)) {
-          setVideoGroups(data.videoGroups);
-          setTotalVideos(data.totalVideos ?? 0);
-        }
+
+        setGroups(finalGroups);
+        setVideoGroups(finalVideoGroups);
+        setTotalPhotos(finalGroups.reduce((acc, g) => acc + g.photos.length, 0));
+        setTotalVideos(finalVideoGroups.reduce((acc, g) => acc + g.videos.length, 0));
       }
     } catch (e) {
       console.warn('Failed to fetch gallery media:', e);
@@ -72,6 +176,8 @@ export default function GalleryPage() {
 
   useEffect(() => {
     fetchGallery();
+    window.addEventListener('csvs_gallery_custom_updated', fetchGallery);
+    return () => window.removeEventListener('csvs_gallery_custom_updated', fetchGallery);
   }, []);
 
   // --- Photo Lightbox Handlers ---

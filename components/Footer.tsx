@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { User, Facebook, Instagram, Youtube, MapPin, Phone, Mail } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { DEFAULT_CONTENT, getStoredContent, SiteContent } from '@/lib/contentStore';
@@ -16,6 +17,7 @@ const quickLinks = [
 ];
 
 export default function Footer() {
+  const pathname = usePathname();
   const [contact, setContact] = useState<SiteContent['contact']>(DEFAULT_CONTENT.contact);
 
   useEffect(() => {
@@ -26,6 +28,11 @@ export default function Footer() {
       return () => window.removeEventListener('csvs_content_updated', loadContent);
     }
   }, []);
+
+  // Hide public footer on Admin Portal
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <footer id="contact" className="bg-brand-dark border-t-4 border-brand-red pt-16 pb-8">

@@ -190,3 +190,118 @@ export function resetStoredContent(): void {
     console.error('Failed to reset content', err);
   }
 }
+
+export interface AdminGalleryItem {
+  id: string;
+  url: string;
+  eventName: string;
+  date: string;
+  rawDate?: string;
+  caption?: string;
+  order?: number;
+}
+
+export interface AdminVideoItem {
+  id: string;
+  url: string;
+  embedUrl: string;
+  streamUrl?: string;
+  thumbnailUrl: string;
+  platform: 'youtube' | 'drive' | 'vimeo' | 'direct';
+  eventName: string;
+  date: string;
+  rawDate?: string;
+  caption?: string;
+  order?: number;
+}
+
+export const CUSTOM_GALLERY_PHOTOS_KEY = 'csvs_custom_gallery_photos';
+export const CUSTOM_GALLERY_VIDEOS_KEY = 'csvs_custom_gallery_videos';
+
+export function getStoredCustomPhotos(): AdminGalleryItem[] | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(CUSTOM_GALLERY_PHOTOS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveStoredCustomPhotos(photos: AdminGalleryItem[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(CUSTOM_GALLERY_PHOTOS_KEY, JSON.stringify(photos));
+    window.dispatchEvent(new Event('csvs_gallery_custom_updated'));
+  } catch (err) {
+    console.error('Failed to save custom photos', err);
+  }
+}
+
+export function resetStoredCustomPhotos(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(CUSTOM_GALLERY_PHOTOS_KEY);
+    window.dispatchEvent(new Event('csvs_gallery_custom_updated'));
+  } catch (err) {
+    console.error('Failed to reset custom photos', err);
+  }
+}
+
+export function getStoredCustomVideos(): AdminVideoItem[] | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(CUSTOM_GALLERY_VIDEOS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveStoredCustomVideos(videos: AdminVideoItem[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(CUSTOM_GALLERY_VIDEOS_KEY, JSON.stringify(videos));
+    window.dispatchEvent(new Event('csvs_gallery_custom_updated'));
+  } catch (err) {
+    console.error('Failed to save custom videos', err);
+  }
+}
+
+export function resetStoredCustomVideos(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(CUSTOM_GALLERY_VIDEOS_KEY);
+    window.dispatchEvent(new Event('csvs_gallery_custom_updated'));
+  } catch (err) {
+    console.error('Failed to reset custom videos', err);
+  }
+}
+
+// Convert any Google Drive sharing link to a direct preview image URL
+export function formatGoogleDriveImageUrl(rawUrl: string): string {
+  if (!rawUrl) return '';
+  const trimmed = rawUrl.trim();
+  if (!trimmed) return '';
+
+  const fileIdMatch =
+    trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
+    trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+
+  if (
+    fileIdMatch &&
+    fileIdMatch[1] &&
+    (trimmed.includes('drive.google.com') ||
+      trimmed.includes('docs.google.com') ||
+      trimmed.includes('googleusercontent.com'))
+  ) {
+    return `https://lh3.googleusercontent.com/d/${fileIdMatch[1]}`;
+  }
+
+  return trimmed;
+}
+
