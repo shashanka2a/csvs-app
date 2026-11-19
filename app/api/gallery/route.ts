@@ -178,6 +178,89 @@ function extractVideoUrls(cellText: string): string[] {
   return urls;
 }
 
+// Parse and format video URLs (YouTube, Google Drive, Vimeo, direct)
+function parseVideoUrl(rawUrl: string): {
+  url: string;
+  embedUrl: string;
+  thumbnailUrl: string;
+  platform: 'youtube' | 'drive' | 'vimeo' | 'direct';
+} | null {
+  if (!rawUrl) return null;
+  const clean = rawUrl.trim().replace(/^["'\s]+|["'\s,;]+$/g, '');
+  if (!clean || !clean.startsWith('http')) return null;
+
+  // 1. YouTube (standard watch, short youtu.be, shorts, embed)
+  const ytMatch = clean.match(
+    /(?:youtube\.com\/(?:watch\?.*v=|shorts\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  );
+  if (ytMatch && ytMatch[1]) {
+    const videoId = ytMatch[1];
+    return {
+      url: clean,
+      embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`,
+      thumbnailUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+      platform: 'youtube',
+    };
+  }
+
+  // 2. Google Drive video
+  const driveMatch =
+    clean.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
+    clean.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (
+    driveMatch &&
+    driveMatch[1] &&
+    (clean.includes('drive.google.com') || clean.includes('docs.google.com'))
+  ) {
+    const fileId = driveMatch[1];
+    return {
+      url: clean,
+      embedUrl: `https://drive.google.com/file/d/${fileId}/preview`,
+      thumbnailUrl: `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`,
+      platform: 'drive',
+    };
+  }
+
+  // 3. Vimeo
+  const vimeoMatch = clean.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch && vimeoMatch[1]) {
+    const vimeoId = vimeoMatch[1];
+    return {
+      url: clean,
+      embedUrl: `https://player.vimeo.com/video/${vimeoId}?autoplay=1`,
+      thumbnailUrl: '',
+      platform: 'vimeo',
+    };
+  }
+
+  // 4. Direct video or generic URL
+  return {
+    url: clean,
+    embedUrl: clean,
+    thumbnailUrl: '',
+    platform: 'direct',
+  };
+}
+
+// Split multiple video URLs from cell text
+function extractVideoUrls(cellText: string): string[] {
+  if (!cellText) return [];
+  const regex = /https?:\/\/[^\s,;"<>]+/g;
+  const matches = cellText.match(regex);
+  const urls: string[] = [];
+
+  if (matches && matches.length > 0) {
+    for (let m of matches) {
+      const clean = m.replace(/^["'\s]+|["'\s,;]+$/g, '').trim();
+      if (clean && !urls.includes(clean)) {
+        urls.push(clean);
+      }
+    }
+  }
+
+  return urls;
+}
+
 // Robust date parser supporting YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY, DD-MM-YYYY, and textual dates
 function parseDate(dateStr: string): Date | null {
   if (!dateStr) return null;
