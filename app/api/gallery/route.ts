@@ -21,6 +21,7 @@ export interface VideoItem {
   id: string;
   url: string;
   embedUrl: string;
+  streamUrl?: string;
   thumbnailUrl: string;
   platform: 'youtube' | 'drive' | 'vimeo' | 'direct';
   eventName: string;
@@ -114,7 +115,8 @@ function parseVideoUrl(rawUrl: string): {
     const videoId = ytMatch[1];
     return {
       url: clean,
-      embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`,
+      embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0`,
+      streamUrl: '',
       thumbnailUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
       platform: 'youtube',
     };
@@ -133,7 +135,8 @@ function parseVideoUrl(rawUrl: string): {
     return {
       url: clean,
       embedUrl: `https://drive.google.com/file/d/${fileId}/preview`,
-      thumbnailUrl: `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`,
+      streamUrl: `https://drive.usercontent.google.com/download?id=${fileId}&export=download`,
+      thumbnailUrl: `https://lh3.googleusercontent.com/d/${fileId}`,
       platform: 'drive',
     };
   }
@@ -145,6 +148,7 @@ function parseVideoUrl(rawUrl: string): {
     return {
       url: clean,
       embedUrl: `https://player.vimeo.com/video/${vimeoId}?autoplay=1`,
+      streamUrl: '',
       thumbnailUrl: '',
       platform: 'vimeo',
     };
@@ -154,6 +158,7 @@ function parseVideoUrl(rawUrl: string): {
   return {
     url: clean,
     embedUrl: clean,
+    streamUrl: clean,
     thumbnailUrl: '',
     platform: 'direct',
   };
@@ -542,6 +547,7 @@ function parseVideosCsv(text: string): VideoGroup[] {
           id: `v_${i}_${vIdx}`,
           url: parsed.url,
           embedUrl: parsed.embedUrl,
+          streamUrl: parsed.streamUrl || parsed.embedUrl,
           thumbnailUrl: parsed.thumbnailUrl,
           platform: parsed.platform,
           eventName,

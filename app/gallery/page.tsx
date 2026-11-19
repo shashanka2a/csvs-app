@@ -552,31 +552,20 @@ export default function GalleryPage() {
                           </div>
                         )}
 
-                        {/* Dark Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/30 group-hover:via-black/20 transition-all" />
+                        {/* Subtle Bottom Gradient (Keeps video thumbnail bright and clear) */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent pointer-events-none" />
 
-                        {/* Top Badges */}
-                        <div className="relative z-10 p-3 flex items-center justify-between">
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase bg-black/60 text-white backdrop-blur-xs border border-white/10">
-                            <Video className="w-3 h-3 text-brand-gold" />
-                            <span>
-                              {video.platform === 'youtube'
-                                ? 'YouTube'
-                                : video.platform === 'drive'
-                                ? 'Google Drive'
-                                : 'Video'}
-                            </span>
-                          </span>
-
-                          <span className="text-white/80 text-[11px] bg-black/40 px-2 py-0.5 rounded backdrop-blur-xs">
+                        {/* Top Bar with Date (Google Drive badge removed) */}
+                        <div className="relative z-10 p-3 flex items-center justify-end">
+                          <span className="text-white/90 text-[11px] font-medium bg-black/50 px-2.5 py-0.5 rounded-md backdrop-blur-xs border border-white/10">
                             {video.date}
                           </span>
                         </div>
 
-                        {/* Center Play Button */}
+                        {/* Center Play Indicator */}
                         <div className="relative z-10 self-center">
-                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-brand-red/90 group-hover:bg-brand-red text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 border border-white/25">
-                            <Play className="w-5 h-5 sm:w-6 sm:h-6 fill-white ml-0.5" />
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/90 group-hover:bg-white text-brand-red flex items-center justify-center shadow-md backdrop-blur-xs group-hover:scale-110 transition-transform duration-200">
+                            <Play className="w-5 h-5 sm:w-6 sm:h-6 fill-brand-red text-brand-red ml-0.5" />
                           </div>
                         </div>
 
@@ -752,20 +741,13 @@ export default function GalleryPage() {
           className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between select-none animate-fade-in"
           onClick={closeVideoModal}
         >
-          {/* Top Bar with Video Title & Date */}
+          {/* Top Bar with Video Title & Date (Google Drive badge removed) */}
           <div
             className="p-4 sm:p-6 flex items-center justify-between text-white border-b border-white/10 shrink-0"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col">
               <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 text-base sm:text-lg font-serif">
-                <span className="bg-brand-red text-white text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded font-sans shadow-2xs">
-                  {activeVideo.platform === 'youtube'
-                    ? 'YouTube Video'
-                    : activeVideo.platform === 'drive'
-                    ? 'Google Drive Video'
-                    : 'Video'}
-                </span>
                 <span className="font-bold text-white truncate max-w-xs sm:max-w-xl">
                   {activeVideo.eventName}
                 </span>
@@ -800,7 +782,7 @@ export default function GalleryPage() {
             </div>
           </div>
 
-          {/* Middle: Video Embed Player */}
+          {/* Middle: Video Player (Native HTML5 on mobile + iframe fallback for YouTube) */}
           <div
             className="relative flex-grow flex items-center justify-center p-2 sm:p-6 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
@@ -818,15 +800,8 @@ export default function GalleryPage() {
             )}
 
             {/* Video Player Container (Responsive 16:9) */}
-            <div className="relative w-full max-w-4xl aspect-video rounded-xl overflow-hidden shadow-2xl bg-black border border-white/10">
-              {activeVideo.platform === 'direct' ? (
-                <video
-                  src={activeVideo.embedUrl}
-                  controls
-                  autoPlay
-                  className="w-full h-full object-contain"
-                />
-              ) : (
+            <div className="relative w-full max-w-4xl aspect-video rounded-xl overflow-hidden shadow-2xl bg-black border border-white/10 flex items-center justify-center">
+              {activeVideo.platform === 'youtube' ? (
                 <iframe
                   src={activeVideo.embedUrl}
                   title={activeVideo.eventName}
@@ -834,6 +809,22 @@ export default function GalleryPage() {
                   allowFullScreen
                   className="w-full h-full border-0"
                 />
+              ) : (
+                <video
+                  key={activeVideo.id}
+                  src={activeVideo.streamUrl || activeVideo.embedUrl}
+                  controls
+                  autoPlay
+                  playsInline
+                  preload="auto"
+                  className="w-full h-full object-contain bg-black"
+                >
+                  <source
+                    src={activeVideo.streamUrl || activeVideo.embedUrl}
+                    type="video/mp4"
+                  />
+                  Your browser does not support HTML5 video playback.
+                </video>
               )}
             </div>
 
@@ -856,7 +847,7 @@ export default function GalleryPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {activeGroupVideos.length > 1 && (
-              <div className="flex sm:hidden items-center justify-between gap-3 max-w-xs mx-auto">
+              <div className="flex sm:hidden items-center justify-between gap-3 max-w-xs mx-auto mb-2">
                 <button
                   type="button"
                   onClick={showPrevVideo}
@@ -881,9 +872,20 @@ export default function GalleryPage() {
               </div>
             )}
 
-            <p className="hidden sm:block text-xs text-gray-400 text-center">
-              Press <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-white font-mono text-[10px]">Esc</kbd> or click outside to close
-            </p>
+            <div className="flex items-center justify-center gap-4 text-xs text-gray-400">
+              <span className="hidden sm:inline">
+                Press <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-white font-mono text-[10px]">Esc</kbd> or click outside to close
+              </span>
+              <a
+                href={activeVideo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-brand-gold hover:underline"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Open original video</span>
+              </a>
+            </div>
           </div>
         </div>
       )}
