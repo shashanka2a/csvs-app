@@ -120,7 +120,7 @@ export default function MatrimonyPage() {
                 <MapPin className="w-5 h-5 text-brand-gold shrink-0 mt-0.5" />
                 <div>
                   <p className="font-bold text-brand-dark text-xs uppercase tracking-wider mb-1">Office Address</p>
-                  <p className="text-brand-muted">Housing Board Colony, Nizamabad, Telangana 503002</p>
+                  <p className="text-brand-muted">Kanteshwar, Nizamabad, Telangana 503002</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">

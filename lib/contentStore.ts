@@ -63,7 +63,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     personName: 'J Ravi Chandar',
     phone: '+91 98487 65051',
     email: 'csvsangham@gmail.com',
-    address: 'Housing Board Colony, Nizamabad, Telangana 503002',
+    address: 'Kanteshwar, Nizamabad, Telangana 503002',
   },
   events: [
     {
@@ -149,9 +149,13 @@ export function getStoredContent(): SiteContent {
     const raw = localStorage.getItem(CONTENT_STORAGE_KEY);
     if (!raw) return DEFAULT_CONTENT;
     const parsed = JSON.parse(raw);
+    const contact = { ...DEFAULT_CONTENT.contact, ...(parsed.contact || {}) };
+    if (contact.address === 'Housing Board Colony, Nizamabad, Telangana 503002') {
+      contact.address = 'Kanteshwar, Nizamabad, Telangana 503002';
+    }
     return {
       hero: { ...DEFAULT_CONTENT.hero, ...(parsed.hero || {}) },
-      contact: { ...DEFAULT_CONTENT.contact, ...(parsed.contact || {}) },
+      contact,
       events: Array.isArray(parsed.events) && parsed.events.length > 0 ? parsed.events : DEFAULT_CONTENT.events,
     };
   } catch {
